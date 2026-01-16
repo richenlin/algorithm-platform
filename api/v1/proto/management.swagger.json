@@ -54,7 +54,7 @@
             "format": "int32"
           },
           {
-            "name": "pageSize",
+            "name": "page_size",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -96,7 +96,7 @@
         ]
       }
     },
-    "/api/v1/algorithms/{algorithmId}/versions": {
+    "/api/v1/algorithms/{algorithm_id}/versions": {
       "post": {
         "operationId": "ManagementService_CreateVersion",
         "responses": {
@@ -115,7 +115,7 @@
         },
         "parameters": [
           {
-            "name": "algorithmId",
+            "name": "algorithm_id",
             "in": "path",
             "required": true,
             "type": "string"
@@ -134,7 +134,7 @@
         ]
       }
     },
-    "/api/v1/algorithms/{algorithmId}/versions/{versionId}/rollback": {
+    "/api/v1/algorithms/{algorithm_id}/versions/{version_id}/rollback": {
       "post": {
         "operationId": "ManagementService_RollbackVersion",
         "responses": {
@@ -153,16 +153,24 @@
         },
         "parameters": [
           {
-            "name": "algorithmId",
+            "name": "algorithm_id",
             "in": "path",
             "required": true,
             "type": "string"
           },
           {
-            "name": "versionId",
+            "name": "version_id",
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ManagementServiceRollbackVersionBody"
+            }
           }
         ],
         "tags": [
@@ -171,6 +179,34 @@
       }
     },
     "/api/v1/algorithms/{id}": {
+      "get": {
+        "operationId": "ManagementService_GetAlgorithm",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetAlgorithmResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ManagementService"
+        ]
+      },
       "put": {
         "operationId": "ManagementService_UpdateAlgorithm",
         "responses": {
@@ -240,7 +276,7 @@
             "format": "int32"
           },
           {
-            "name": "pageSize",
+            "name": "page_size",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -303,7 +339,7 @@
         },
         "parameters": [
           {
-            "name": "algorithmId",
+            "name": "algorithm_id",
             "in": "query",
             "required": false,
             "type": "string"
@@ -322,7 +358,7 @@
             "format": "int32"
           },
           {
-            "name": "pageSize",
+            "name": "page_size",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -334,7 +370,7 @@
         ]
       }
     },
-    "/api/v1/jobs/{jobId}/detail": {
+    "/api/v1/jobs/{job_id}/detail": {
       "get": {
         "operationId": "ManagementService_GetJobDetail",
         "responses": {
@@ -353,12 +389,34 @@
         },
         "parameters": [
           {
-            "name": "jobId",
+            "name": "job_id",
             "in": "path",
             "required": true,
             "type": "string"
           }
         ],
+        "tags": [
+          "ManagementService"
+        ]
+      }
+    },
+    "/api/v1/server/info": {
+      "get": {
+        "operationId": "ManagementService_GetServerInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetServerInfoResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
         "tags": [
           "ManagementService"
         ]
@@ -369,13 +427,23 @@
     "ManagementServiceCreateVersionBody": {
       "type": "object",
       "properties": {
-        "sourceCodeZipUrl": {
+        "source_code_zip_url": {
           "type": "string"
         },
-        "commitMessage": {
+        "commit_message": {
+          "type": "string"
+        },
+        "file_data": {
+          "type": "string",
+          "format": "byte"
+        },
+        "file_name": {
           "type": "string"
         }
       }
+    },
+    "ManagementServiceRollbackVersionBody": {
+      "type": "object"
     },
     "ManagementServiceUpdateAlgorithmBody": {
       "type": "object",
@@ -386,8 +454,11 @@
         "description": {
           "type": "string"
         },
-        "category": {
-          "type": "string"
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -435,7 +506,7 @@
           "type": "string"
         },
         "platform": {
-          "type": "string"
+          "$ref": "#/definitions/v1Platform"
         },
         "category": {
           "type": "string"
@@ -443,14 +514,23 @@
         "entrypoint": {
           "type": "string"
         },
-        "currentVersionId": {
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "preset_data_id": {
           "type": "string"
         },
-        "createdAt": {
+        "current_version_id": {
+          "type": "string"
+        },
+        "created_at": {
           "type": "string",
           "format": "date-time"
         },
-        "updatedAt": {
+        "updated_at": {
           "type": "string",
           "format": "date-time"
         }
@@ -469,12 +549,57 @@
           "type": "string"
         },
         "platform": {
-          "type": "string"
-        },
-        "category": {
-          "type": "string"
+          "$ref": "#/definitions/v1Platform"
         },
         "entrypoint": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "preset_data_id": {
+          "type": "string"
+        },
+        "file_data": {
+          "type": "string",
+          "format": "byte"
+        },
+        "file_name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GetAlgorithmResponse": {
+      "type": "object",
+      "properties": {
+        "algorithm": {
+          "$ref": "#/definitions/v1Algorithm"
+        },
+        "versions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Version"
+          }
+        }
+      }
+    },
+    "v1GetServerInfoResponse": {
+      "type": "object",
+      "properties": {
+        "os": {
+          "type": "string"
+        },
+        "arch": {
+          "type": "string"
+        },
+        "platform": {
+          "$ref": "#/definitions/v1Platform"
+        },
+        "platform_name": {
           "type": "string"
         }
       }
@@ -482,13 +607,13 @@
     "v1JobDetail": {
       "type": "object",
       "properties": {
-        "jobId": {
+        "job_id": {
           "type": "string"
         },
-        "algorithmId": {
+        "algorithm_id": {
           "type": "string"
         },
-        "algorithmName": {
+        "algorithm_name": {
           "type": "string"
         },
         "mode": {
@@ -497,35 +622,35 @@
         "status": {
           "type": "string"
         },
-        "inputParams": {
+        "input_params": {
           "type": "string"
         },
-        "inputUrl": {
+        "input_url": {
           "type": "string"
         },
-        "outputUrl": {
+        "output_url": {
           "type": "string"
         },
-        "logUrl": {
+        "log_url": {
           "type": "string"
         },
-        "createdAt": {
+        "created_at": {
           "type": "string",
           "format": "date-time"
         },
-        "startedAt": {
+        "started_at": {
           "type": "string",
           "format": "date-time"
         },
-        "finishedAt": {
+        "finished_at": {
           "type": "string",
           "format": "date-time"
         },
-        "costTimeMs": {
+        "cost_time_ms": {
           "type": "integer",
           "format": "int32"
         },
-        "workerId": {
+        "worker_id": {
           "type": "string"
         }
       }
@@ -533,23 +658,23 @@
     "v1JobSummary": {
       "type": "object",
       "properties": {
-        "jobId": {
+        "job_id": {
           "type": "string"
         },
-        "algorithmId": {
+        "algorithm_id": {
           "type": "string"
         },
-        "algorithmName": {
+        "algorithm_name": {
           "type": "string"
         },
         "status": {
           "type": "string"
         },
-        "createdAt": {
+        "created_at": {
           "type": "string",
           "format": "date-time"
         },
-        "costTimeMs": {
+        "cost_time_ms": {
           "type": "integer",
           "format": "int32"
         }
@@ -603,6 +728,17 @@
         }
       }
     },
+    "v1Platform": {
+      "type": "string",
+      "enum": [
+        "PLATFORM_DOCKER",
+        "PLATFORM_LINUX_X86_64",
+        "PLATFORM_LINUX_ARM64",
+        "PLATFORM_WINDOWS_X86_64",
+        "PLATFORM_MACOS_ARM64"
+      ],
+      "default": "PLATFORM_DOCKER"
+    },
     "v1PresetData": {
       "type": "object",
       "properties": {
@@ -615,10 +751,10 @@
         "category": {
           "type": "string"
         },
-        "minioUrl": {
+        "minio_url": {
           "type": "string"
         },
-        "createdAt": {
+        "created_at": {
           "type": "string",
           "format": "date-time"
         }
@@ -633,7 +769,11 @@
         "category": {
           "type": "string"
         },
-        "minioPath": {
+        "file_data": {
+          "type": "string",
+          "format": "byte"
+        },
+        "minio_path": {
           "type": "string"
         }
       }
@@ -641,10 +781,10 @@
     "v1UploadDataResponse": {
       "type": "object",
       "properties": {
-        "fileId": {
+        "file_id": {
           "type": "string"
         },
-        "minioUrl": {
+        "minio_url": {
           "type": "string"
         }
       }
@@ -655,20 +795,23 @@
         "id": {
           "type": "string"
         },
-        "algorithmId": {
+        "algorithm_id": {
           "type": "string"
         },
-        "versionNumber": {
+        "version_number": {
           "type": "integer",
           "format": "int32"
         },
-        "minioPath": {
+        "minio_path": {
           "type": "string"
         },
-        "commitMessage": {
+        "source_code_file": {
           "type": "string"
         },
-        "createdAt": {
+        "commit_message": {
+          "type": "string"
+        },
+        "created_at": {
           "type": "string",
           "format": "date-time"
         }

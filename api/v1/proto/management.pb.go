@@ -23,14 +23,72 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type Platform int32
+
+const (
+	Platform_PLATFORM_DOCKER         Platform = 0
+	Platform_PLATFORM_LINUX_X86_64   Platform = 1
+	Platform_PLATFORM_LINUX_ARM64    Platform = 2
+	Platform_PLATFORM_WINDOWS_X86_64 Platform = 3
+	Platform_PLATFORM_MACOS_ARM64    Platform = 4
+)
+
+// Enum value maps for Platform.
+var (
+	Platform_name = map[int32]string{
+		0: "PLATFORM_DOCKER",
+		1: "PLATFORM_LINUX_X86_64",
+		2: "PLATFORM_LINUX_ARM64",
+		3: "PLATFORM_WINDOWS_X86_64",
+		4: "PLATFORM_MACOS_ARM64",
+	}
+	Platform_value = map[string]int32{
+		"PLATFORM_DOCKER":         0,
+		"PLATFORM_LINUX_X86_64":   1,
+		"PLATFORM_LINUX_ARM64":    2,
+		"PLATFORM_WINDOWS_X86_64": 3,
+		"PLATFORM_MACOS_ARM64":    4,
+	}
+)
+
+func (x Platform) Enum() *Platform {
+	p := new(Platform)
+	*p = x
+	return p
+}
+
+func (x Platform) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Platform) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_management_proto_enumTypes[0].Descriptor()
+}
+
+func (Platform) Type() protoreflect.EnumType {
+	return &file_proto_management_proto_enumTypes[0]
+}
+
+func (x Platform) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Platform.Descriptor instead.
+func (Platform) EnumDescriptor() ([]byte, []int) {
+	return file_proto_management_proto_rawDescGZIP(), []int{0}
+}
+
 type CreateAlgorithmRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
 	Language      string                 `protobuf:"bytes,3,opt,name=language,proto3" json:"language,omitempty"`
-	Platform      string                 `protobuf:"bytes,4,opt,name=platform,proto3" json:"platform,omitempty"`
-	Category      string                 `protobuf:"bytes,5,opt,name=category,proto3" json:"category,omitempty"`
-	Entrypoint    string                 `protobuf:"bytes,6,opt,name=entrypoint,proto3" json:"entrypoint,omitempty"`
+	Platform      Platform               `protobuf:"varint,4,opt,name=platform,proto3,enum=api.v1.Platform" json:"platform,omitempty"`
+	Entrypoint    string                 `protobuf:"bytes,5,opt,name=entrypoint,proto3" json:"entrypoint,omitempty"`
+	Tags          []string               `protobuf:"bytes,6,rep,name=tags,proto3" json:"tags,omitempty"`
+	PresetDataId  string                 `protobuf:"bytes,7,opt,name=preset_data_id,proto3" json:"preset_data_id,omitempty"`
+	FileData      []byte                 `protobuf:"bytes,8,opt,name=file_data,proto3" json:"file_data,omitempty"`
+	FileName      string                 `protobuf:"bytes,9,opt,name=file_name,proto3" json:"file_name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -86,18 +144,11 @@ func (x *CreateAlgorithmRequest) GetLanguage() string {
 	return ""
 }
 
-func (x *CreateAlgorithmRequest) GetPlatform() string {
+func (x *CreateAlgorithmRequest) GetPlatform() Platform {
 	if x != nil {
 		return x.Platform
 	}
-	return ""
-}
-
-func (x *CreateAlgorithmRequest) GetCategory() string {
-	if x != nil {
-		return x.Category
-	}
-	return ""
+	return Platform_PLATFORM_DOCKER
 }
 
 func (x *CreateAlgorithmRequest) GetEntrypoint() string {
@@ -107,12 +158,40 @@ func (x *CreateAlgorithmRequest) GetEntrypoint() string {
 	return ""
 }
 
+func (x *CreateAlgorithmRequest) GetTags() []string {
+	if x != nil {
+		return x.Tags
+	}
+	return nil
+}
+
+func (x *CreateAlgorithmRequest) GetPresetDataId() string {
+	if x != nil {
+		return x.PresetDataId
+	}
+	return ""
+}
+
+func (x *CreateAlgorithmRequest) GetFileData() []byte {
+	if x != nil {
+		return x.FileData
+	}
+	return nil
+}
+
+func (x *CreateAlgorithmRequest) GetFileName() string {
+	if x != nil {
+		return x.FileName
+	}
+	return ""
+}
+
 type UpdateAlgorithmRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	Category      string                 `protobuf:"bytes,4,opt,name=category,proto3" json:"category,omitempty"`
+	Tags          []string               `protobuf:"bytes,4,rep,name=tags,proto3" json:"tags,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -168,11 +247,11 @@ func (x *UpdateAlgorithmRequest) GetDescription() string {
 	return ""
 }
 
-func (x *UpdateAlgorithmRequest) GetCategory() string {
+func (x *UpdateAlgorithmRequest) GetTags() []string {
 	if x != nil {
-		return x.Category
+		return x.Tags
 	}
-	return ""
+	return nil
 }
 
 type Algorithm struct {
@@ -181,12 +260,14 @@ type Algorithm struct {
 	Name             string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Description      string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	Language         string                 `protobuf:"bytes,4,opt,name=language,proto3" json:"language,omitempty"`
-	Platform         string                 `protobuf:"bytes,5,opt,name=platform,proto3" json:"platform,omitempty"`
+	Platform         Platform               `protobuf:"varint,5,opt,name=platform,proto3,enum=api.v1.Platform" json:"platform,omitempty"`
 	Category         string                 `protobuf:"bytes,6,opt,name=category,proto3" json:"category,omitempty"`
 	Entrypoint       string                 `protobuf:"bytes,7,opt,name=entrypoint,proto3" json:"entrypoint,omitempty"`
-	CurrentVersionId string                 `protobuf:"bytes,8,opt,name=current_version_id,json=currentVersionId,proto3" json:"current_version_id,omitempty"`
-	CreatedAt        *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt        *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Tags             []string               `protobuf:"bytes,8,rep,name=tags,proto3" json:"tags,omitempty"`
+	PresetDataId     string                 `protobuf:"bytes,9,opt,name=preset_data_id,proto3" json:"preset_data_id,omitempty"`
+	CurrentVersionId string                 `protobuf:"bytes,10,opt,name=current_version_id,proto3" json:"current_version_id,omitempty"`
+	CreatedAt        *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=created_at,proto3" json:"created_at,omitempty"`
+	UpdatedAt        *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=updated_at,proto3" json:"updated_at,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -249,11 +330,11 @@ func (x *Algorithm) GetLanguage() string {
 	return ""
 }
 
-func (x *Algorithm) GetPlatform() string {
+func (x *Algorithm) GetPlatform() Platform {
 	if x != nil {
 		return x.Platform
 	}
-	return ""
+	return Platform_PLATFORM_DOCKER
 }
 
 func (x *Algorithm) GetCategory() string {
@@ -266,6 +347,20 @@ func (x *Algorithm) GetCategory() string {
 func (x *Algorithm) GetEntrypoint() string {
 	if x != nil {
 		return x.Entrypoint
+	}
+	return ""
+}
+
+func (x *Algorithm) GetTags() []string {
+	if x != nil {
+		return x.Tags
+	}
+	return nil
+}
+
+func (x *Algorithm) GetPresetDataId() string {
+	if x != nil {
+		return x.PresetDataId
 	}
 	return ""
 }
@@ -296,7 +391,7 @@ type ListAlgorithmsRequest struct {
 	Category      string                 `protobuf:"bytes,1,opt,name=category,proto3" json:"category,omitempty"`
 	Language      string                 `protobuf:"bytes,2,opt,name=language,proto3" json:"language,omitempty"`
 	Page          int32                  `protobuf:"varint,3,opt,name=page,proto3" json:"page,omitempty"`
-	PageSize      int32                  `protobuf:"varint,4,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	PageSize      int32                  `protobuf:"varint,4,opt,name=page_size,proto3" json:"page_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -411,18 +506,116 @@ func (x *ListAlgorithmsResponse) GetTotal() int32 {
 	return 0
 }
 
+type GetAlgorithmRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetAlgorithmRequest) Reset() {
+	*x = GetAlgorithmRequest{}
+	mi := &file_proto_management_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetAlgorithmRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetAlgorithmRequest) ProtoMessage() {}
+
+func (x *GetAlgorithmRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_management_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetAlgorithmRequest.ProtoReflect.Descriptor instead.
+func (*GetAlgorithmRequest) Descriptor() ([]byte, []int) {
+	return file_proto_management_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *GetAlgorithmRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type GetAlgorithmResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Algorithm     *Algorithm             `protobuf:"bytes,1,opt,name=algorithm,proto3" json:"algorithm,omitempty"`
+	Versions      []*Version             `protobuf:"bytes,2,rep,name=versions,proto3" json:"versions,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetAlgorithmResponse) Reset() {
+	*x = GetAlgorithmResponse{}
+	mi := &file_proto_management_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetAlgorithmResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetAlgorithmResponse) ProtoMessage() {}
+
+func (x *GetAlgorithmResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_management_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetAlgorithmResponse.ProtoReflect.Descriptor instead.
+func (*GetAlgorithmResponse) Descriptor() ([]byte, []int) {
+	return file_proto_management_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *GetAlgorithmResponse) GetAlgorithm() *Algorithm {
+	if x != nil {
+		return x.Algorithm
+	}
+	return nil
+}
+
+func (x *GetAlgorithmResponse) GetVersions() []*Version {
+	if x != nil {
+		return x.Versions
+	}
+	return nil
+}
+
 type CreateVersionRequest struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
-	AlgorithmId      string                 `protobuf:"bytes,1,opt,name=algorithm_id,json=algorithmId,proto3" json:"algorithm_id,omitempty"`
-	SourceCodeZipUrl string                 `protobuf:"bytes,2,opt,name=source_code_zip_url,json=sourceCodeZipUrl,proto3" json:"source_code_zip_url,omitempty"`
-	CommitMessage    string                 `protobuf:"bytes,3,opt,name=commit_message,json=commitMessage,proto3" json:"commit_message,omitempty"`
+	AlgorithmId      string                 `protobuf:"bytes,1,opt,name=algorithm_id,proto3" json:"algorithm_id,omitempty"`
+	SourceCodeZipUrl string                 `protobuf:"bytes,2,opt,name=source_code_zip_url,proto3" json:"source_code_zip_url,omitempty"`
+	CommitMessage    string                 `protobuf:"bytes,3,opt,name=commit_message,proto3" json:"commit_message,omitempty"`
+	FileData         []byte                 `protobuf:"bytes,4,opt,name=file_data,proto3" json:"file_data,omitempty"`
+	FileName         string                 `protobuf:"bytes,5,opt,name=file_name,proto3" json:"file_name,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
 
 func (x *CreateVersionRequest) Reset() {
 	*x = CreateVersionRequest{}
-	mi := &file_proto_management_proto_msgTypes[5]
+	mi := &file_proto_management_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -434,7 +627,7 @@ func (x *CreateVersionRequest) String() string {
 func (*CreateVersionRequest) ProtoMessage() {}
 
 func (x *CreateVersionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_management_proto_msgTypes[5]
+	mi := &file_proto_management_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -447,7 +640,7 @@ func (x *CreateVersionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateVersionRequest.ProtoReflect.Descriptor instead.
 func (*CreateVersionRequest) Descriptor() ([]byte, []int) {
-	return file_proto_management_proto_rawDescGZIP(), []int{5}
+	return file_proto_management_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *CreateVersionRequest) GetAlgorithmId() string {
@@ -471,21 +664,36 @@ func (x *CreateVersionRequest) GetCommitMessage() string {
 	return ""
 }
 
+func (x *CreateVersionRequest) GetFileData() []byte {
+	if x != nil {
+		return x.FileData
+	}
+	return nil
+}
+
+func (x *CreateVersionRequest) GetFileName() string {
+	if x != nil {
+		return x.FileName
+	}
+	return ""
+}
+
 type Version struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	AlgorithmId   string                 `protobuf:"bytes,2,opt,name=algorithm_id,json=algorithmId,proto3" json:"algorithm_id,omitempty"`
-	VersionNumber int32                  `protobuf:"varint,3,opt,name=version_number,json=versionNumber,proto3" json:"version_number,omitempty"`
-	MinioPath     string                 `protobuf:"bytes,4,opt,name=minio_path,json=minioPath,proto3" json:"minio_path,omitempty"`
-	CommitMessage string                 `protobuf:"bytes,5,opt,name=commit_message,json=commitMessage,proto3" json:"commit_message,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	AlgorithmId    string                 `protobuf:"bytes,2,opt,name=algorithm_id,proto3" json:"algorithm_id,omitempty"`
+	VersionNumber  int32                  `protobuf:"varint,3,opt,name=version_number,proto3" json:"version_number,omitempty"`
+	MinioPath      string                 `protobuf:"bytes,4,opt,name=minio_path,proto3" json:"minio_path,omitempty"`
+	SourceCodeFile string                 `protobuf:"bytes,5,opt,name=source_code_file,proto3" json:"source_code_file,omitempty"`
+	CommitMessage  string                 `protobuf:"bytes,6,opt,name=commit_message,proto3" json:"commit_message,omitempty"`
+	CreatedAt      *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,proto3" json:"created_at,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *Version) Reset() {
 	*x = Version{}
-	mi := &file_proto_management_proto_msgTypes[6]
+	mi := &file_proto_management_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -497,7 +705,7 @@ func (x *Version) String() string {
 func (*Version) ProtoMessage() {}
 
 func (x *Version) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_management_proto_msgTypes[6]
+	mi := &file_proto_management_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -510,7 +718,7 @@ func (x *Version) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Version.ProtoReflect.Descriptor instead.
 func (*Version) Descriptor() ([]byte, []int) {
-	return file_proto_management_proto_rawDescGZIP(), []int{6}
+	return file_proto_management_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Version) GetId() string {
@@ -541,6 +749,13 @@ func (x *Version) GetMinioPath() string {
 	return ""
 }
 
+func (x *Version) GetSourceCodeFile() string {
+	if x != nil {
+		return x.SourceCodeFile
+	}
+	return ""
+}
+
 func (x *Version) GetCommitMessage() string {
 	if x != nil {
 		return x.CommitMessage
@@ -557,15 +772,15 @@ func (x *Version) GetCreatedAt() *timestamppb.Timestamp {
 
 type RollbackVersionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	AlgorithmId   string                 `protobuf:"bytes,1,opt,name=algorithm_id,json=algorithmId,proto3" json:"algorithm_id,omitempty"`
-	VersionId     string                 `protobuf:"bytes,2,opt,name=version_id,json=versionId,proto3" json:"version_id,omitempty"`
+	AlgorithmId   string                 `protobuf:"bytes,1,opt,name=algorithm_id,proto3" json:"algorithm_id,omitempty"`
+	VersionId     string                 `protobuf:"bytes,2,opt,name=version_id,proto3" json:"version_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *RollbackVersionRequest) Reset() {
 	*x = RollbackVersionRequest{}
-	mi := &file_proto_management_proto_msgTypes[7]
+	mi := &file_proto_management_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -577,7 +792,7 @@ func (x *RollbackVersionRequest) String() string {
 func (*RollbackVersionRequest) ProtoMessage() {}
 
 func (x *RollbackVersionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_management_proto_msgTypes[7]
+	mi := &file_proto_management_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -590,7 +805,7 @@ func (x *RollbackVersionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RollbackVersionRequest.ProtoReflect.Descriptor instead.
 func (*RollbackVersionRequest) Descriptor() ([]byte, []int) {
-	return file_proto_management_proto_rawDescGZIP(), []int{7}
+	return file_proto_management_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *RollbackVersionRequest) GetAlgorithmId() string {
@@ -611,14 +826,15 @@ type UploadDataRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Filename      string                 `protobuf:"bytes,1,opt,name=filename,proto3" json:"filename,omitempty"`
 	Category      string                 `protobuf:"bytes,2,opt,name=category,proto3" json:"category,omitempty"`
-	MinioPath     string                 `protobuf:"bytes,3,opt,name=minio_path,json=minioPath,proto3" json:"minio_path,omitempty"`
+	FileData      []byte                 `protobuf:"bytes,3,opt,name=file_data,proto3" json:"file_data,omitempty"`
+	MinioPath     string                 `protobuf:"bytes,4,opt,name=minio_path,proto3" json:"minio_path,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *UploadDataRequest) Reset() {
 	*x = UploadDataRequest{}
-	mi := &file_proto_management_proto_msgTypes[8]
+	mi := &file_proto_management_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -630,7 +846,7 @@ func (x *UploadDataRequest) String() string {
 func (*UploadDataRequest) ProtoMessage() {}
 
 func (x *UploadDataRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_management_proto_msgTypes[8]
+	mi := &file_proto_management_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -643,7 +859,7 @@ func (x *UploadDataRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UploadDataRequest.ProtoReflect.Descriptor instead.
 func (*UploadDataRequest) Descriptor() ([]byte, []int) {
-	return file_proto_management_proto_rawDescGZIP(), []int{8}
+	return file_proto_management_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *UploadDataRequest) GetFilename() string {
@@ -660,6 +876,13 @@ func (x *UploadDataRequest) GetCategory() string {
 	return ""
 }
 
+func (x *UploadDataRequest) GetFileData() []byte {
+	if x != nil {
+		return x.FileData
+	}
+	return nil
+}
+
 func (x *UploadDataRequest) GetMinioPath() string {
 	if x != nil {
 		return x.MinioPath
@@ -669,15 +892,15 @@ func (x *UploadDataRequest) GetMinioPath() string {
 
 type UploadDataResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	FileId        string                 `protobuf:"bytes,1,opt,name=file_id,json=fileId,proto3" json:"file_id,omitempty"`
-	MinioUrl      string                 `protobuf:"bytes,2,opt,name=minio_url,json=minioUrl,proto3" json:"minio_url,omitempty"`
+	FileId        string                 `protobuf:"bytes,1,opt,name=file_id,proto3" json:"file_id,omitempty"`
+	MinioUrl      string                 `protobuf:"bytes,2,opt,name=minio_url,proto3" json:"minio_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *UploadDataResponse) Reset() {
 	*x = UploadDataResponse{}
-	mi := &file_proto_management_proto_msgTypes[9]
+	mi := &file_proto_management_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -689,7 +912,7 @@ func (x *UploadDataResponse) String() string {
 func (*UploadDataResponse) ProtoMessage() {}
 
 func (x *UploadDataResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_management_proto_msgTypes[9]
+	mi := &file_proto_management_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -702,7 +925,7 @@ func (x *UploadDataResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UploadDataResponse.ProtoReflect.Descriptor instead.
 func (*UploadDataResponse) Descriptor() ([]byte, []int) {
-	return file_proto_management_proto_rawDescGZIP(), []int{9}
+	return file_proto_management_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *UploadDataResponse) GetFileId() string {
@@ -723,14 +946,14 @@ type ListPresetDataRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Category      string                 `protobuf:"bytes,1,opt,name=category,proto3" json:"category,omitempty"`
 	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
-	PageSize      int32                  `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	PageSize      int32                  `protobuf:"varint,3,opt,name=page_size,proto3" json:"page_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListPresetDataRequest) Reset() {
 	*x = ListPresetDataRequest{}
-	mi := &file_proto_management_proto_msgTypes[10]
+	mi := &file_proto_management_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -742,7 +965,7 @@ func (x *ListPresetDataRequest) String() string {
 func (*ListPresetDataRequest) ProtoMessage() {}
 
 func (x *ListPresetDataRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_management_proto_msgTypes[10]
+	mi := &file_proto_management_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -755,7 +978,7 @@ func (x *ListPresetDataRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPresetDataRequest.ProtoReflect.Descriptor instead.
 func (*ListPresetDataRequest) Descriptor() ([]byte, []int) {
-	return file_proto_management_proto_rawDescGZIP(), []int{10}
+	return file_proto_management_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ListPresetDataRequest) GetCategory() string {
@@ -779,72 +1002,20 @@ func (x *ListPresetDataRequest) GetPageSize() int32 {
 	return 0
 }
 
-type ListPresetDataResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Files         []*PresetData          `protobuf:"bytes,1,rep,name=files,proto3" json:"files,omitempty"`
-	Total         int32                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListPresetDataResponse) Reset() {
-	*x = ListPresetDataResponse{}
-	mi := &file_proto_management_proto_msgTypes[11]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListPresetDataResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListPresetDataResponse) ProtoMessage() {}
-
-func (x *ListPresetDataResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_management_proto_msgTypes[11]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListPresetDataResponse.ProtoReflect.Descriptor instead.
-func (*ListPresetDataResponse) Descriptor() ([]byte, []int) {
-	return file_proto_management_proto_rawDescGZIP(), []int{11}
-}
-
-func (x *ListPresetDataResponse) GetFiles() []*PresetData {
-	if x != nil {
-		return x.Files
-	}
-	return nil
-}
-
-func (x *ListPresetDataResponse) GetTotal() int32 {
-	if x != nil {
-		return x.Total
-	}
-	return 0
-}
-
 type PresetData struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Filename      string                 `protobuf:"bytes,2,opt,name=filename,proto3" json:"filename,omitempty"`
 	Category      string                 `protobuf:"bytes,3,opt,name=category,proto3" json:"category,omitempty"`
-	MinioUrl      string                 `protobuf:"bytes,4,opt,name=minio_url,json=minioUrl,proto3" json:"minio_url,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	MinioUrl      string                 `protobuf:"bytes,4,opt,name=minio_url,proto3" json:"minio_url,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,proto3" json:"created_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *PresetData) Reset() {
 	*x = PresetData{}
-	mi := &file_proto_management_proto_msgTypes[12]
+	mi := &file_proto_management_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -856,7 +1027,7 @@ func (x *PresetData) String() string {
 func (*PresetData) ProtoMessage() {}
 
 func (x *PresetData) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_management_proto_msgTypes[12]
+	mi := &file_proto_management_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -869,7 +1040,7 @@ func (x *PresetData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PresetData.ProtoReflect.Descriptor instead.
 func (*PresetData) Descriptor() ([]byte, []int) {
-	return file_proto_management_proto_rawDescGZIP(), []int{12}
+	return file_proto_management_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *PresetData) GetId() string {
@@ -907,19 +1078,71 @@ func (x *PresetData) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+type ListPresetDataResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Files         []*PresetData          `protobuf:"bytes,1,rep,name=files,proto3" json:"files,omitempty"`
+	Total         int32                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListPresetDataResponse) Reset() {
+	*x = ListPresetDataResponse{}
+	mi := &file_proto_management_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListPresetDataResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListPresetDataResponse) ProtoMessage() {}
+
+func (x *ListPresetDataResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_management_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListPresetDataResponse.ProtoReflect.Descriptor instead.
+func (*ListPresetDataResponse) Descriptor() ([]byte, []int) {
+	return file_proto_management_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *ListPresetDataResponse) GetFiles() []*PresetData {
+	if x != nil {
+		return x.Files
+	}
+	return nil
+}
+
+func (x *ListPresetDataResponse) GetTotal() int32 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
 type ListJobsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	AlgorithmId   string                 `protobuf:"bytes,1,opt,name=algorithm_id,json=algorithmId,proto3" json:"algorithm_id,omitempty"`
+	AlgorithmId   string                 `protobuf:"bytes,1,opt,name=algorithm_id,proto3" json:"algorithm_id,omitempty"`
 	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
 	Page          int32                  `protobuf:"varint,3,opt,name=page,proto3" json:"page,omitempty"`
-	PageSize      int32                  `protobuf:"varint,4,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	PageSize      int32                  `protobuf:"varint,4,opt,name=page_size,proto3" json:"page_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListJobsRequest) Reset() {
 	*x = ListJobsRequest{}
-	mi := &file_proto_management_proto_msgTypes[13]
+	mi := &file_proto_management_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -931,7 +1154,7 @@ func (x *ListJobsRequest) String() string {
 func (*ListJobsRequest) ProtoMessage() {}
 
 func (x *ListJobsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_management_proto_msgTypes[13]
+	mi := &file_proto_management_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -944,7 +1167,7 @@ func (x *ListJobsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListJobsRequest.ProtoReflect.Descriptor instead.
 func (*ListJobsRequest) Descriptor() ([]byte, []int) {
-	return file_proto_management_proto_rawDescGZIP(), []int{13}
+	return file_proto_management_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ListJobsRequest) GetAlgorithmId() string {
@@ -975,73 +1198,21 @@ func (x *ListJobsRequest) GetPageSize() int32 {
 	return 0
 }
 
-type ListJobsResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Jobs          []*JobSummary          `protobuf:"bytes,1,rep,name=jobs,proto3" json:"jobs,omitempty"`
-	Total         int32                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListJobsResponse) Reset() {
-	*x = ListJobsResponse{}
-	mi := &file_proto_management_proto_msgTypes[14]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListJobsResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListJobsResponse) ProtoMessage() {}
-
-func (x *ListJobsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_management_proto_msgTypes[14]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListJobsResponse.ProtoReflect.Descriptor instead.
-func (*ListJobsResponse) Descriptor() ([]byte, []int) {
-	return file_proto_management_proto_rawDescGZIP(), []int{14}
-}
-
-func (x *ListJobsResponse) GetJobs() []*JobSummary {
-	if x != nil {
-		return x.Jobs
-	}
-	return nil
-}
-
-func (x *ListJobsResponse) GetTotal() int32 {
-	if x != nil {
-		return x.Total
-	}
-	return 0
-}
-
 type JobSummary struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
-	AlgorithmId   string                 `protobuf:"bytes,2,opt,name=algorithm_id,json=algorithmId,proto3" json:"algorithm_id,omitempty"`
-	AlgorithmName string                 `protobuf:"bytes,3,opt,name=algorithm_name,json=algorithmName,proto3" json:"algorithm_name,omitempty"`
+	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,proto3" json:"job_id,omitempty"`
+	AlgorithmId   string                 `protobuf:"bytes,2,opt,name=algorithm_id,proto3" json:"algorithm_id,omitempty"`
+	AlgorithmName string                 `protobuf:"bytes,3,opt,name=algorithm_name,proto3" json:"algorithm_name,omitempty"`
 	Status        string                 `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	CostTimeMs    int32                  `protobuf:"varint,6,opt,name=cost_time_ms,json=costTimeMs,proto3" json:"cost_time_ms,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,proto3" json:"created_at,omitempty"`
+	CostTimeMs    int32                  `protobuf:"varint,6,opt,name=cost_time_ms,proto3" json:"cost_time_ms,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *JobSummary) Reset() {
 	*x = JobSummary{}
-	mi := &file_proto_management_proto_msgTypes[15]
+	mi := &file_proto_management_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1053,7 +1224,7 @@ func (x *JobSummary) String() string {
 func (*JobSummary) ProtoMessage() {}
 
 func (x *JobSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_management_proto_msgTypes[15]
+	mi := &file_proto_management_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1066,7 +1237,7 @@ func (x *JobSummary) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JobSummary.ProtoReflect.Descriptor instead.
 func (*JobSummary) Descriptor() ([]byte, []int) {
-	return file_proto_management_proto_rawDescGZIP(), []int{15}
+	return file_proto_management_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *JobSummary) GetJobId() string {
@@ -1111,16 +1282,68 @@ func (x *JobSummary) GetCostTimeMs() int32 {
 	return 0
 }
 
+type ListJobsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Jobs          []*JobSummary          `protobuf:"bytes,1,rep,name=jobs,proto3" json:"jobs,omitempty"`
+	Total         int32                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListJobsResponse) Reset() {
+	*x = ListJobsResponse{}
+	mi := &file_proto_management_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListJobsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListJobsResponse) ProtoMessage() {}
+
+func (x *ListJobsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_management_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListJobsResponse.ProtoReflect.Descriptor instead.
+func (*ListJobsResponse) Descriptor() ([]byte, []int) {
+	return file_proto_management_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *ListJobsResponse) GetJobs() []*JobSummary {
+	if x != nil {
+		return x.Jobs
+	}
+	return nil
+}
+
+func (x *ListJobsResponse) GetTotal() int32 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
 type GetJobDetailRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,proto3" json:"job_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetJobDetailRequest) Reset() {
 	*x = GetJobDetailRequest{}
-	mi := &file_proto_management_proto_msgTypes[16]
+	mi := &file_proto_management_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1132,7 +1355,7 @@ func (x *GetJobDetailRequest) String() string {
 func (*GetJobDetailRequest) ProtoMessage() {}
 
 func (x *GetJobDetailRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_management_proto_msgTypes[16]
+	mi := &file_proto_management_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1145,7 +1368,7 @@ func (x *GetJobDetailRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetJobDetailRequest.ProtoReflect.Descriptor instead.
 func (*GetJobDetailRequest) Descriptor() ([]byte, []int) {
-	return file_proto_management_proto_rawDescGZIP(), []int{16}
+	return file_proto_management_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *GetJobDetailRequest) GetJobId() string {
@@ -1157,27 +1380,27 @@ func (x *GetJobDetailRequest) GetJobId() string {
 
 type JobDetail struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
-	AlgorithmId   string                 `protobuf:"bytes,2,opt,name=algorithm_id,json=algorithmId,proto3" json:"algorithm_id,omitempty"`
-	AlgorithmName string                 `protobuf:"bytes,3,opt,name=algorithm_name,json=algorithmName,proto3" json:"algorithm_name,omitempty"`
+	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,proto3" json:"job_id,omitempty"`
+	AlgorithmId   string                 `protobuf:"bytes,2,opt,name=algorithm_id,proto3" json:"algorithm_id,omitempty"`
+	AlgorithmName string                 `protobuf:"bytes,3,opt,name=algorithm_name,proto3" json:"algorithm_name,omitempty"`
 	Mode          string                 `protobuf:"bytes,4,opt,name=mode,proto3" json:"mode,omitempty"`
 	Status        string                 `protobuf:"bytes,5,opt,name=status,proto3" json:"status,omitempty"`
-	InputParams   string                 `protobuf:"bytes,6,opt,name=input_params,json=inputParams,proto3" json:"input_params,omitempty"`
-	InputUrl      string                 `protobuf:"bytes,7,opt,name=input_url,json=inputUrl,proto3" json:"input_url,omitempty"`
-	OutputUrl     string                 `protobuf:"bytes,8,opt,name=output_url,json=outputUrl,proto3" json:"output_url,omitempty"`
-	LogUrl        string                 `protobuf:"bytes,9,opt,name=log_url,json=logUrl,proto3" json:"log_url,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	StartedAt     *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
-	FinishedAt    *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=finished_at,json=finishedAt,proto3" json:"finished_at,omitempty"`
-	CostTimeMs    int32                  `protobuf:"varint,13,opt,name=cost_time_ms,json=costTimeMs,proto3" json:"cost_time_ms,omitempty"`
-	WorkerId      string                 `protobuf:"bytes,14,opt,name=worker_id,json=workerId,proto3" json:"worker_id,omitempty"`
+	InputParams   string                 `protobuf:"bytes,6,opt,name=input_params,proto3" json:"input_params,omitempty"`
+	InputUrl      string                 `protobuf:"bytes,7,opt,name=input_url,proto3" json:"input_url,omitempty"`
+	OutputUrl     string                 `protobuf:"bytes,8,opt,name=output_url,proto3" json:"output_url,omitempty"`
+	LogUrl        string                 `protobuf:"bytes,9,opt,name=log_url,proto3" json:"log_url,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,proto3" json:"created_at,omitempty"`
+	StartedAt     *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=started_at,proto3" json:"started_at,omitempty"`
+	FinishedAt    *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=finished_at,proto3" json:"finished_at,omitempty"`
+	CostTimeMs    int32                  `protobuf:"varint,13,opt,name=cost_time_ms,proto3" json:"cost_time_ms,omitempty"`
+	WorkerId      string                 `protobuf:"bytes,14,opt,name=worker_id,proto3" json:"worker_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *JobDetail) Reset() {
 	*x = JobDetail{}
-	mi := &file_proto_management_proto_msgTypes[17]
+	mi := &file_proto_management_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1189,7 +1412,7 @@ func (x *JobDetail) String() string {
 func (*JobDetail) ProtoMessage() {}
 
 func (x *JobDetail) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_management_proto_msgTypes[17]
+	mi := &file_proto_management_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1202,7 +1425,7 @@ func (x *JobDetail) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JobDetail.ProtoReflect.Descriptor instead.
 func (*JobDetail) Descriptor() ([]byte, []int) {
-	return file_proto_management_proto_rawDescGZIP(), []int{17}
+	return file_proto_management_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *JobDetail) GetJobId() string {
@@ -1303,142 +1526,282 @@ func (x *JobDetail) GetWorkerId() string {
 	return ""
 }
 
+type GetServerInfoRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetServerInfoRequest) Reset() {
+	*x = GetServerInfoRequest{}
+	mi := &file_proto_management_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetServerInfoRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetServerInfoRequest) ProtoMessage() {}
+
+func (x *GetServerInfoRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_management_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetServerInfoRequest.ProtoReflect.Descriptor instead.
+func (*GetServerInfoRequest) Descriptor() ([]byte, []int) {
+	return file_proto_management_proto_rawDescGZIP(), []int{20}
+}
+
+type GetServerInfoResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Os            string                 `protobuf:"bytes,1,opt,name=os,proto3" json:"os,omitempty"`
+	Arch          string                 `protobuf:"bytes,2,opt,name=arch,proto3" json:"arch,omitempty"`
+	Platform      Platform               `protobuf:"varint,3,opt,name=platform,proto3,enum=api.v1.Platform" json:"platform,omitempty"`
+	PlatformName  string                 `protobuf:"bytes,4,opt,name=platform_name,proto3" json:"platform_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetServerInfoResponse) Reset() {
+	*x = GetServerInfoResponse{}
+	mi := &file_proto_management_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetServerInfoResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetServerInfoResponse) ProtoMessage() {}
+
+func (x *GetServerInfoResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_management_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetServerInfoResponse.ProtoReflect.Descriptor instead.
+func (*GetServerInfoResponse) Descriptor() ([]byte, []int) {
+	return file_proto_management_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *GetServerInfoResponse) GetOs() string {
+	if x != nil {
+		return x.Os
+	}
+	return ""
+}
+
+func (x *GetServerInfoResponse) GetArch() string {
+	if x != nil {
+		return x.Arch
+	}
+	return ""
+}
+
+func (x *GetServerInfoResponse) GetPlatform() Platform {
+	if x != nil {
+		return x.Platform
+	}
+	return Platform_PLATFORM_DOCKER
+}
+
+func (x *GetServerInfoResponse) GetPlatformName() string {
+	if x != nil {
+		return x.PlatformName
+	}
+	return ""
+}
+
 var File_proto_management_proto protoreflect.FileDescriptor
 
 const file_proto_management_proto_rawDesc = "" +
 	"\n" +
-	"\x16proto/management.proto\x12\x06api.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xc2\x01\n" +
+	"\x16proto/management.proto\x12\x06api.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb0\x02\n" +
 	"\x16CreateAlgorithmRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x1a\n" +
-	"\blanguage\x18\x03 \x01(\tR\blanguage\x12\x1a\n" +
-	"\bplatform\x18\x04 \x01(\tR\bplatform\x12\x1a\n" +
-	"\bcategory\x18\x05 \x01(\tR\bcategory\x12\x1e\n" +
+	"\blanguage\x18\x03 \x01(\tR\blanguage\x12,\n" +
+	"\bplatform\x18\x04 \x01(\x0e2\x10.api.v1.PlatformR\bplatform\x12\x1e\n" +
 	"\n" +
-	"entrypoint\x18\x06 \x01(\tR\n" +
-	"entrypoint\"z\n" +
+	"entrypoint\x18\x05 \x01(\tR\n" +
+	"entrypoint\x12\x12\n" +
+	"\x04tags\x18\x06 \x03(\tR\x04tags\x12&\n" +
+	"\x0epreset_data_id\x18\a \x01(\tR\x0epreset_data_id\x12\x1c\n" +
+	"\tfile_data\x18\b \x01(\fR\tfile_data\x12\x1c\n" +
+	"\tfile_name\x18\t \x01(\tR\tfile_name\"r\n" +
 	"\x16UpdateAlgorithmRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
-	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1a\n" +
-	"\bcategory\x18\x04 \x01(\tR\bcategory\"\xe9\x02\n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x12\n" +
+	"\x04tags\x18\x04 \x03(\tR\x04tags\"\xbb\x03\n" +
 	"\tAlgorithm\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1a\n" +
-	"\blanguage\x18\x04 \x01(\tR\blanguage\x12\x1a\n" +
-	"\bplatform\x18\x05 \x01(\tR\bplatform\x12\x1a\n" +
+	"\blanguage\x18\x04 \x01(\tR\blanguage\x12,\n" +
+	"\bplatform\x18\x05 \x01(\x0e2\x10.api.v1.PlatformR\bplatform\x12\x1a\n" +
 	"\bcategory\x18\x06 \x01(\tR\bcategory\x12\x1e\n" +
 	"\n" +
 	"entrypoint\x18\a \x01(\tR\n" +
-	"entrypoint\x12,\n" +
-	"\x12current_version_id\x18\b \x01(\tR\x10currentVersionId\x129\n" +
+	"entrypoint\x12\x12\n" +
+	"\x04tags\x18\b \x03(\tR\x04tags\x12&\n" +
+	"\x0epreset_data_id\x18\t \x01(\tR\x0epreset_data_id\x12.\n" +
+	"\x12current_version_id\x18\n" +
+	" \x01(\tR\x12current_version_id\x12:\n" +
 	"\n" +
-	"created_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"created_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"created_at\x12:\n" +
 	"\n" +
-	"updated_at\x18\n" +
-	" \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x80\x01\n" +
+	"updated_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"updated_at\"\x81\x01\n" +
 	"\x15ListAlgorithmsRequest\x12\x1a\n" +
 	"\bcategory\x18\x01 \x01(\tR\bcategory\x12\x1a\n" +
 	"\blanguage\x18\x02 \x01(\tR\blanguage\x12\x12\n" +
-	"\x04page\x18\x03 \x01(\x05R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x04 \x01(\x05R\bpageSize\"a\n" +
+	"\x04page\x18\x03 \x01(\x05R\x04page\x12\x1c\n" +
+	"\tpage_size\x18\x04 \x01(\x05R\tpage_size\"a\n" +
 	"\x16ListAlgorithmsResponse\x121\n" +
 	"\n" +
 	"algorithms\x18\x01 \x03(\v2\x11.api.v1.AlgorithmR\n" +
 	"algorithms\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x05R\x05total\"\x8f\x01\n" +
-	"\x14CreateVersionRequest\x12!\n" +
-	"\falgorithm_id\x18\x01 \x01(\tR\valgorithmId\x12-\n" +
-	"\x13source_code_zip_url\x18\x02 \x01(\tR\x10sourceCodeZipUrl\x12%\n" +
-	"\x0ecommit_message\x18\x03 \x01(\tR\rcommitMessage\"\xe4\x01\n" +
+	"\x05total\x18\x02 \x01(\x05R\x05total\"%\n" +
+	"\x13GetAlgorithmRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"t\n" +
+	"\x14GetAlgorithmResponse\x12/\n" +
+	"\talgorithm\x18\x01 \x01(\v2\x11.api.v1.AlgorithmR\talgorithm\x12+\n" +
+	"\bversions\x18\x02 \x03(\v2\x0f.api.v1.VersionR\bversions\"\xd0\x01\n" +
+	"\x14CreateVersionRequest\x12\"\n" +
+	"\falgorithm_id\x18\x01 \x01(\tR\falgorithm_id\x120\n" +
+	"\x13source_code_zip_url\x18\x02 \x01(\tR\x13source_code_zip_url\x12&\n" +
+	"\x0ecommit_message\x18\x03 \x01(\tR\x0ecommit_message\x12\x1c\n" +
+	"\tfile_data\x18\x04 \x01(\fR\tfile_data\x12\x1c\n" +
+	"\tfile_name\x18\x05 \x01(\tR\tfile_name\"\x95\x02\n" +
 	"\aVersion\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
-	"\falgorithm_id\x18\x02 \x01(\tR\valgorithmId\x12%\n" +
-	"\x0eversion_number\x18\x03 \x01(\x05R\rversionNumber\x12\x1d\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\"\n" +
+	"\falgorithm_id\x18\x02 \x01(\tR\falgorithm_id\x12&\n" +
+	"\x0eversion_number\x18\x03 \x01(\x05R\x0eversion_number\x12\x1e\n" +
 	"\n" +
-	"minio_path\x18\x04 \x01(\tR\tminioPath\x12%\n" +
-	"\x0ecommit_message\x18\x05 \x01(\tR\rcommitMessage\x129\n" +
+	"minio_path\x18\x04 \x01(\tR\n" +
+	"minio_path\x12*\n" +
+	"\x10source_code_file\x18\x05 \x01(\tR\x10source_code_file\x12&\n" +
+	"\x0ecommit_message\x18\x06 \x01(\tR\x0ecommit_message\x12:\n" +
 	"\n" +
-	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"Z\n" +
-	"\x16RollbackVersionRequest\x12!\n" +
-	"\falgorithm_id\x18\x01 \x01(\tR\valgorithmId\x12\x1d\n" +
+	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"created_at\"\\\n" +
+	"\x16RollbackVersionRequest\x12\"\n" +
+	"\falgorithm_id\x18\x01 \x01(\tR\falgorithm_id\x12\x1e\n" +
 	"\n" +
-	"version_id\x18\x02 \x01(\tR\tversionId\"j\n" +
+	"version_id\x18\x02 \x01(\tR\n" +
+	"version_id\"\x89\x01\n" +
 	"\x11UploadDataRequest\x12\x1a\n" +
 	"\bfilename\x18\x01 \x01(\tR\bfilename\x12\x1a\n" +
-	"\bcategory\x18\x02 \x01(\tR\bcategory\x12\x1d\n" +
+	"\bcategory\x18\x02 \x01(\tR\bcategory\x12\x1c\n" +
+	"\tfile_data\x18\x03 \x01(\fR\tfile_data\x12\x1e\n" +
 	"\n" +
-	"minio_path\x18\x03 \x01(\tR\tminioPath\"J\n" +
-	"\x12UploadDataResponse\x12\x17\n" +
-	"\afile_id\x18\x01 \x01(\tR\x06fileId\x12\x1b\n" +
-	"\tminio_url\x18\x02 \x01(\tR\bminioUrl\"d\n" +
+	"minio_path\x18\x04 \x01(\tR\n" +
+	"minio_path\"L\n" +
+	"\x12UploadDataResponse\x12\x18\n" +
+	"\afile_id\x18\x01 \x01(\tR\afile_id\x12\x1c\n" +
+	"\tminio_url\x18\x02 \x01(\tR\tminio_url\"e\n" +
 	"\x15ListPresetDataRequest\x12\x1a\n" +
 	"\bcategory\x18\x01 \x01(\tR\bcategory\x12\x12\n" +
-	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\"X\n" +
-	"\x16ListPresetDataResponse\x12(\n" +
-	"\x05files\x18\x01 \x03(\v2\x12.api.v1.PresetDataR\x05files\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x05R\x05total\"\xac\x01\n" +
+	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x1c\n" +
+	"\tpage_size\x18\x03 \x01(\x05R\tpage_size\"\xae\x01\n" +
 	"\n" +
 	"PresetData\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
 	"\bfilename\x18\x02 \x01(\tR\bfilename\x12\x1a\n" +
-	"\bcategory\x18\x03 \x01(\tR\bcategory\x12\x1b\n" +
-	"\tminio_url\x18\x04 \x01(\tR\bminioUrl\x129\n" +
+	"\bcategory\x18\x03 \x01(\tR\bcategory\x12\x1c\n" +
+	"\tminio_url\x18\x04 \x01(\tR\tminio_url\x12:\n" +
 	"\n" +
-	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"}\n" +
-	"\x0fListJobsRequest\x12!\n" +
-	"\falgorithm_id\x18\x01 \x01(\tR\valgorithmId\x12\x16\n" +
+	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"created_at\"X\n" +
+	"\x16ListPresetDataResponse\x12(\n" +
+	"\x05files\x18\x01 \x03(\v2\x12.api.v1.PresetDataR\x05files\x12\x14\n" +
+	"\x05total\x18\x02 \x01(\x05R\x05total\"\x7f\n" +
+	"\x0fListJobsRequest\x12\"\n" +
+	"\falgorithm_id\x18\x01 \x01(\tR\falgorithm_id\x12\x16\n" +
 	"\x06status\x18\x02 \x01(\tR\x06status\x12\x12\n" +
-	"\x04page\x18\x03 \x01(\x05R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x04 \x01(\x05R\bpageSize\"P\n" +
+	"\x04page\x18\x03 \x01(\x05R\x04page\x12\x1c\n" +
+	"\tpage_size\x18\x04 \x01(\x05R\tpage_size\"\xe8\x01\n" +
+	"\n" +
+	"JobSummary\x12\x16\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x06job_id\x12\"\n" +
+	"\falgorithm_id\x18\x02 \x01(\tR\falgorithm_id\x12&\n" +
+	"\x0ealgorithm_name\x18\x03 \x01(\tR\x0ealgorithm_name\x12\x16\n" +
+	"\x06status\x18\x04 \x01(\tR\x06status\x12:\n" +
+	"\n" +
+	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"created_at\x12\"\n" +
+	"\fcost_time_ms\x18\x06 \x01(\x05R\fcost_time_ms\"P\n" +
 	"\x10ListJobsResponse\x12&\n" +
 	"\x04jobs\x18\x01 \x03(\v2\x12.api.v1.JobSummaryR\x04jobs\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x05R\x05total\"\xe2\x01\n" +
-	"\n" +
-	"JobSummary\x12\x15\n" +
-	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12!\n" +
-	"\falgorithm_id\x18\x02 \x01(\tR\valgorithmId\x12%\n" +
-	"\x0ealgorithm_name\x18\x03 \x01(\tR\ralgorithmName\x12\x16\n" +
-	"\x06status\x18\x04 \x01(\tR\x06status\x129\n" +
-	"\n" +
-	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12 \n" +
-	"\fcost_time_ms\x18\x06 \x01(\x05R\n" +
-	"costTimeMs\",\n" +
-	"\x13GetJobDetailRequest\x12\x15\n" +
-	"\x06job_id\x18\x01 \x01(\tR\x05jobId\"\x82\x04\n" +
-	"\tJobDetail\x12\x15\n" +
-	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12!\n" +
-	"\falgorithm_id\x18\x02 \x01(\tR\valgorithmId\x12%\n" +
-	"\x0ealgorithm_name\x18\x03 \x01(\tR\ralgorithmName\x12\x12\n" +
+	"\x05total\x18\x02 \x01(\x05R\x05total\"-\n" +
+	"\x13GetJobDetailRequest\x12\x16\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x06job_id\"\x8f\x04\n" +
+	"\tJobDetail\x12\x16\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x06job_id\x12\"\n" +
+	"\falgorithm_id\x18\x02 \x01(\tR\falgorithm_id\x12&\n" +
+	"\x0ealgorithm_name\x18\x03 \x01(\tR\x0ealgorithm_name\x12\x12\n" +
 	"\x04mode\x18\x04 \x01(\tR\x04mode\x12\x16\n" +
-	"\x06status\x18\x05 \x01(\tR\x06status\x12!\n" +
-	"\finput_params\x18\x06 \x01(\tR\vinputParams\x12\x1b\n" +
-	"\tinput_url\x18\a \x01(\tR\binputUrl\x12\x1d\n" +
+	"\x06status\x18\x05 \x01(\tR\x06status\x12\"\n" +
+	"\finput_params\x18\x06 \x01(\tR\finput_params\x12\x1c\n" +
+	"\tinput_url\x18\a \x01(\tR\tinput_url\x12\x1e\n" +
 	"\n" +
-	"output_url\x18\b \x01(\tR\toutputUrl\x12\x17\n" +
-	"\alog_url\x18\t \x01(\tR\x06logUrl\x129\n" +
+	"output_url\x18\b \x01(\tR\n" +
+	"output_url\x12\x18\n" +
+	"\alog_url\x18\t \x01(\tR\alog_url\x12:\n" +
 	"\n" +
 	"created_at\x18\n" +
-	" \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"created_at\x12:\n" +
 	"\n" +
-	"started_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\x12;\n" +
-	"\vfinished_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"finishedAt\x12 \n" +
-	"\fcost_time_ms\x18\r \x01(\x05R\n" +
-	"costTimeMs\x12\x1b\n" +
-	"\tworker_id\x18\x0e \x01(\tR\bworkerId2\xe4\a\n" +
+	"started_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"started_at\x12<\n" +
+	"\vfinished_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\vfinished_at\x12\"\n" +
+	"\fcost_time_ms\x18\r \x01(\x05R\fcost_time_ms\x12\x1c\n" +
+	"\tworker_id\x18\x0e \x01(\tR\tworker_id\"\x16\n" +
+	"\x14GetServerInfoRequest\"\x8f\x01\n" +
+	"\x15GetServerInfoResponse\x12\x0e\n" +
+	"\x02os\x18\x01 \x01(\tR\x02os\x12\x12\n" +
+	"\x04arch\x18\x02 \x01(\tR\x04arch\x12,\n" +
+	"\bplatform\x18\x03 \x01(\x0e2\x10.api.v1.PlatformR\bplatform\x12$\n" +
+	"\rplatform_name\x18\x04 \x01(\tR\rplatform_name*\x8b\x01\n" +
+	"\bPlatform\x12\x13\n" +
+	"\x0fPLATFORM_DOCKER\x10\x00\x12\x19\n" +
+	"\x15PLATFORM_LINUX_X86_64\x10\x01\x12\x18\n" +
+	"\x14PLATFORM_LINUX_ARM64\x10\x02\x12\x1b\n" +
+	"\x17PLATFORM_WINDOWS_X86_64\x10\x03\x12\x18\n" +
+	"\x14PLATFORM_MACOS_ARM64\x10\x042\xbe\t\n" +
 	"\x11ManagementService\x12c\n" +
 	"\x0fCreateAlgorithm\x12\x1e.api.v1.CreateAlgorithmRequest\x1a\x11.api.v1.Algorithm\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/api/v1/algorithms\x12h\n" +
 	"\x0fUpdateAlgorithm\x12\x1e.api.v1.UpdateAlgorithmRequest\x1a\x11.api.v1.Algorithm\"\"\x82\xd3\xe4\x93\x02\x1c:\x01*\x1a\x17/api/v1/algorithms/{id}\x12k\n" +
-	"\x0eListAlgorithms\x12\x1d.api.v1.ListAlgorithmsRequest\x1a\x1e.api.v1.ListAlgorithmsResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/api/v1/algorithms\x12u\n" +
-	"\rCreateVersion\x12\x1c.api.v1.CreateVersionRequest\x1a\x0f.api.v1.Version\"5\x82\xd3\xe4\x93\x02/:\x01*\"*/api/v1/algorithms/{algorithm_id}/versions\x12\x8e\x01\n" +
-	"\x0fRollbackVersion\x12\x1e.api.v1.RollbackVersionRequest\x1a\x11.api.v1.Algorithm\"H\x82\xd3\xe4\x93\x02B\"@/api/v1/algorithms/{algorithm_id}/versions/{version_id}/rollback\x12i\n" +
+	"\x0eListAlgorithms\x12\x1d.api.v1.ListAlgorithmsRequest\x1a\x1e.api.v1.ListAlgorithmsResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/api/v1/algorithms\x12j\n" +
+	"\fGetAlgorithm\x12\x1b.api.v1.GetAlgorithmRequest\x1a\x1c.api.v1.GetAlgorithmResponse\"\x1f\x82\xd3\xe4\x93\x02\x19\x12\x17/api/v1/algorithms/{id}\x12u\n" +
+	"\rCreateVersion\x12\x1c.api.v1.CreateVersionRequest\x1a\x0f.api.v1.Version\"5\x82\xd3\xe4\x93\x02/:\x01*\"*/api/v1/algorithms/{algorithm_id}/versions\x12\x91\x01\n" +
+	"\x0fRollbackVersion\x12\x1e.api.v1.RollbackVersionRequest\x1a\x11.api.v1.Algorithm\"K\x82\xd3\xe4\x93\x02E:\x01*\"@/api/v1/algorithms/{algorithm_id}/versions/{version_id}/rollback\x12i\n" +
 	"\x10UploadPresetData\x12\x19.api.v1.UploadDataRequest\x1a\x1a.api.v1.UploadDataResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/api/v1/data/upload\x12e\n" +
 	"\x0eListPresetData\x12\x1d.api.v1.ListPresetDataRequest\x1a\x1e.api.v1.ListPresetDataResponse\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/api/v1/data\x12S\n" +
 	"\bListJobs\x12\x17.api.v1.ListJobsRequest\x1a\x18.api.v1.ListJobsResponse\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/api/v1/jobs\x12d\n" +
-	"\fGetJobDetail\x12\x1b.api.v1.GetJobDetailRequest\x1a\x11.api.v1.JobDetail\"$\x82\xd3\xe4\x93\x02\x1e\x12\x1c/api/v1/jobs/{job_id}/detailB\x1eZ\x1calgorithm-platform/api/v1;v1b\x06proto3"
+	"\fGetJobDetail\x12\x1b.api.v1.GetJobDetailRequest\x1a\x11.api.v1.JobDetail\"$\x82\xd3\xe4\x93\x02\x1e\x12\x1c/api/v1/jobs/{job_id}/detail\x12i\n" +
+	"\rGetServerInfo\x12\x1c.api.v1.GetServerInfoRequest\x1a\x1d.api.v1.GetServerInfoResponse\"\x1b\x82\xd3\xe4\x93\x02\x15\x12\x13/api/v1/server/infoB$Z\"algorithm-platform/api/v1/proto;v1b\x06proto3"
 
 var (
 	file_proto_management_proto_rawDescOnce sync.Once
@@ -1452,63 +1815,78 @@ func file_proto_management_proto_rawDescGZIP() []byte {
 	return file_proto_management_proto_rawDescData
 }
 
-var file_proto_management_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_proto_management_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_proto_management_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_proto_management_proto_goTypes = []any{
-	(*CreateAlgorithmRequest)(nil), // 0: api.v1.CreateAlgorithmRequest
-	(*UpdateAlgorithmRequest)(nil), // 1: api.v1.UpdateAlgorithmRequest
-	(*Algorithm)(nil),              // 2: api.v1.Algorithm
-	(*ListAlgorithmsRequest)(nil),  // 3: api.v1.ListAlgorithmsRequest
-	(*ListAlgorithmsResponse)(nil), // 4: api.v1.ListAlgorithmsResponse
-	(*CreateVersionRequest)(nil),   // 5: api.v1.CreateVersionRequest
-	(*Version)(nil),                // 6: api.v1.Version
-	(*RollbackVersionRequest)(nil), // 7: api.v1.RollbackVersionRequest
-	(*UploadDataRequest)(nil),      // 8: api.v1.UploadDataRequest
-	(*UploadDataResponse)(nil),     // 9: api.v1.UploadDataResponse
-	(*ListPresetDataRequest)(nil),  // 10: api.v1.ListPresetDataRequest
-	(*ListPresetDataResponse)(nil), // 11: api.v1.ListPresetDataResponse
-	(*PresetData)(nil),             // 12: api.v1.PresetData
-	(*ListJobsRequest)(nil),        // 13: api.v1.ListJobsRequest
-	(*ListJobsResponse)(nil),       // 14: api.v1.ListJobsResponse
-	(*JobSummary)(nil),             // 15: api.v1.JobSummary
-	(*GetJobDetailRequest)(nil),    // 16: api.v1.GetJobDetailRequest
-	(*JobDetail)(nil),              // 17: api.v1.JobDetail
-	(*timestamppb.Timestamp)(nil),  // 18: google.protobuf.Timestamp
+	(Platform)(0),                  // 0: api.v1.Platform
+	(*CreateAlgorithmRequest)(nil), // 1: api.v1.CreateAlgorithmRequest
+	(*UpdateAlgorithmRequest)(nil), // 2: api.v1.UpdateAlgorithmRequest
+	(*Algorithm)(nil),              // 3: api.v1.Algorithm
+	(*ListAlgorithmsRequest)(nil),  // 4: api.v1.ListAlgorithmsRequest
+	(*ListAlgorithmsResponse)(nil), // 5: api.v1.ListAlgorithmsResponse
+	(*GetAlgorithmRequest)(nil),    // 6: api.v1.GetAlgorithmRequest
+	(*GetAlgorithmResponse)(nil),   // 7: api.v1.GetAlgorithmResponse
+	(*CreateVersionRequest)(nil),   // 8: api.v1.CreateVersionRequest
+	(*Version)(nil),                // 9: api.v1.Version
+	(*RollbackVersionRequest)(nil), // 10: api.v1.RollbackVersionRequest
+	(*UploadDataRequest)(nil),      // 11: api.v1.UploadDataRequest
+	(*UploadDataResponse)(nil),     // 12: api.v1.UploadDataResponse
+	(*ListPresetDataRequest)(nil),  // 13: api.v1.ListPresetDataRequest
+	(*PresetData)(nil),             // 14: api.v1.PresetData
+	(*ListPresetDataResponse)(nil), // 15: api.v1.ListPresetDataResponse
+	(*ListJobsRequest)(nil),        // 16: api.v1.ListJobsRequest
+	(*JobSummary)(nil),             // 17: api.v1.JobSummary
+	(*ListJobsResponse)(nil),       // 18: api.v1.ListJobsResponse
+	(*GetJobDetailRequest)(nil),    // 19: api.v1.GetJobDetailRequest
+	(*JobDetail)(nil),              // 20: api.v1.JobDetail
+	(*GetServerInfoRequest)(nil),   // 21: api.v1.GetServerInfoRequest
+	(*GetServerInfoResponse)(nil),  // 22: api.v1.GetServerInfoResponse
+	(*timestamppb.Timestamp)(nil),  // 23: google.protobuf.Timestamp
 }
 var file_proto_management_proto_depIdxs = []int32{
-	18, // 0: api.v1.Algorithm.created_at:type_name -> google.protobuf.Timestamp
-	18, // 1: api.v1.Algorithm.updated_at:type_name -> google.protobuf.Timestamp
-	2,  // 2: api.v1.ListAlgorithmsResponse.algorithms:type_name -> api.v1.Algorithm
-	18, // 3: api.v1.Version.created_at:type_name -> google.protobuf.Timestamp
-	12, // 4: api.v1.ListPresetDataResponse.files:type_name -> api.v1.PresetData
-	18, // 5: api.v1.PresetData.created_at:type_name -> google.protobuf.Timestamp
-	15, // 6: api.v1.ListJobsResponse.jobs:type_name -> api.v1.JobSummary
-	18, // 7: api.v1.JobSummary.created_at:type_name -> google.protobuf.Timestamp
-	18, // 8: api.v1.JobDetail.created_at:type_name -> google.protobuf.Timestamp
-	18, // 9: api.v1.JobDetail.started_at:type_name -> google.protobuf.Timestamp
-	18, // 10: api.v1.JobDetail.finished_at:type_name -> google.protobuf.Timestamp
-	0,  // 11: api.v1.ManagementService.CreateAlgorithm:input_type -> api.v1.CreateAlgorithmRequest
-	1,  // 12: api.v1.ManagementService.UpdateAlgorithm:input_type -> api.v1.UpdateAlgorithmRequest
-	3,  // 13: api.v1.ManagementService.ListAlgorithms:input_type -> api.v1.ListAlgorithmsRequest
-	5,  // 14: api.v1.ManagementService.CreateVersion:input_type -> api.v1.CreateVersionRequest
-	7,  // 15: api.v1.ManagementService.RollbackVersion:input_type -> api.v1.RollbackVersionRequest
-	8,  // 16: api.v1.ManagementService.UploadPresetData:input_type -> api.v1.UploadDataRequest
-	10, // 17: api.v1.ManagementService.ListPresetData:input_type -> api.v1.ListPresetDataRequest
-	13, // 18: api.v1.ManagementService.ListJobs:input_type -> api.v1.ListJobsRequest
-	16, // 19: api.v1.ManagementService.GetJobDetail:input_type -> api.v1.GetJobDetailRequest
-	2,  // 20: api.v1.ManagementService.CreateAlgorithm:output_type -> api.v1.Algorithm
-	2,  // 21: api.v1.ManagementService.UpdateAlgorithm:output_type -> api.v1.Algorithm
-	4,  // 22: api.v1.ManagementService.ListAlgorithms:output_type -> api.v1.ListAlgorithmsResponse
-	6,  // 23: api.v1.ManagementService.CreateVersion:output_type -> api.v1.Version
-	2,  // 24: api.v1.ManagementService.RollbackVersion:output_type -> api.v1.Algorithm
-	9,  // 25: api.v1.ManagementService.UploadPresetData:output_type -> api.v1.UploadDataResponse
-	11, // 26: api.v1.ManagementService.ListPresetData:output_type -> api.v1.ListPresetDataResponse
-	14, // 27: api.v1.ManagementService.ListJobs:output_type -> api.v1.ListJobsResponse
-	17, // 28: api.v1.ManagementService.GetJobDetail:output_type -> api.v1.JobDetail
-	20, // [20:29] is the sub-list for method output_type
-	11, // [11:20] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	0,  // 0: api.v1.CreateAlgorithmRequest.platform:type_name -> api.v1.Platform
+	0,  // 1: api.v1.Algorithm.platform:type_name -> api.v1.Platform
+	23, // 2: api.v1.Algorithm.created_at:type_name -> google.protobuf.Timestamp
+	23, // 3: api.v1.Algorithm.updated_at:type_name -> google.protobuf.Timestamp
+	3,  // 4: api.v1.ListAlgorithmsResponse.algorithms:type_name -> api.v1.Algorithm
+	3,  // 5: api.v1.GetAlgorithmResponse.algorithm:type_name -> api.v1.Algorithm
+	9,  // 6: api.v1.GetAlgorithmResponse.versions:type_name -> api.v1.Version
+	23, // 7: api.v1.Version.created_at:type_name -> google.protobuf.Timestamp
+	23, // 8: api.v1.PresetData.created_at:type_name -> google.protobuf.Timestamp
+	14, // 9: api.v1.ListPresetDataResponse.files:type_name -> api.v1.PresetData
+	23, // 10: api.v1.JobSummary.created_at:type_name -> google.protobuf.Timestamp
+	17, // 11: api.v1.ListJobsResponse.jobs:type_name -> api.v1.JobSummary
+	23, // 12: api.v1.JobDetail.created_at:type_name -> google.protobuf.Timestamp
+	23, // 13: api.v1.JobDetail.started_at:type_name -> google.protobuf.Timestamp
+	23, // 14: api.v1.JobDetail.finished_at:type_name -> google.protobuf.Timestamp
+	0,  // 15: api.v1.GetServerInfoResponse.platform:type_name -> api.v1.Platform
+	1,  // 16: api.v1.ManagementService.CreateAlgorithm:input_type -> api.v1.CreateAlgorithmRequest
+	2,  // 17: api.v1.ManagementService.UpdateAlgorithm:input_type -> api.v1.UpdateAlgorithmRequest
+	4,  // 18: api.v1.ManagementService.ListAlgorithms:input_type -> api.v1.ListAlgorithmsRequest
+	6,  // 19: api.v1.ManagementService.GetAlgorithm:input_type -> api.v1.GetAlgorithmRequest
+	8,  // 20: api.v1.ManagementService.CreateVersion:input_type -> api.v1.CreateVersionRequest
+	10, // 21: api.v1.ManagementService.RollbackVersion:input_type -> api.v1.RollbackVersionRequest
+	11, // 22: api.v1.ManagementService.UploadPresetData:input_type -> api.v1.UploadDataRequest
+	13, // 23: api.v1.ManagementService.ListPresetData:input_type -> api.v1.ListPresetDataRequest
+	16, // 24: api.v1.ManagementService.ListJobs:input_type -> api.v1.ListJobsRequest
+	19, // 25: api.v1.ManagementService.GetJobDetail:input_type -> api.v1.GetJobDetailRequest
+	21, // 26: api.v1.ManagementService.GetServerInfo:input_type -> api.v1.GetServerInfoRequest
+	3,  // 27: api.v1.ManagementService.CreateAlgorithm:output_type -> api.v1.Algorithm
+	3,  // 28: api.v1.ManagementService.UpdateAlgorithm:output_type -> api.v1.Algorithm
+	5,  // 29: api.v1.ManagementService.ListAlgorithms:output_type -> api.v1.ListAlgorithmsResponse
+	7,  // 30: api.v1.ManagementService.GetAlgorithm:output_type -> api.v1.GetAlgorithmResponse
+	9,  // 31: api.v1.ManagementService.CreateVersion:output_type -> api.v1.Version
+	3,  // 32: api.v1.ManagementService.RollbackVersion:output_type -> api.v1.Algorithm
+	12, // 33: api.v1.ManagementService.UploadPresetData:output_type -> api.v1.UploadDataResponse
+	15, // 34: api.v1.ManagementService.ListPresetData:output_type -> api.v1.ListPresetDataResponse
+	18, // 35: api.v1.ManagementService.ListJobs:output_type -> api.v1.ListJobsResponse
+	20, // 36: api.v1.ManagementService.GetJobDetail:output_type -> api.v1.JobDetail
+	22, // 37: api.v1.ManagementService.GetServerInfo:output_type -> api.v1.GetServerInfoResponse
+	27, // [27:38] is the sub-list for method output_type
+	16, // [16:27] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_proto_management_proto_init() }
@@ -1521,13 +1899,14 @@ func file_proto_management_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_management_proto_rawDesc), len(file_proto_management_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   18,
+			NumEnums:      1,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_proto_management_proto_goTypes,
 		DependencyIndexes: file_proto_management_proto_depIdxs,
+		EnumInfos:         file_proto_management_proto_enumTypes,
 		MessageInfos:      file_proto_management_proto_msgTypes,
 	}.Build()
 	File_proto_management_proto = out.File

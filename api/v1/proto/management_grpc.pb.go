@@ -22,12 +22,14 @@ const (
 	ManagementService_CreateAlgorithm_FullMethodName  = "/api.v1.ManagementService/CreateAlgorithm"
 	ManagementService_UpdateAlgorithm_FullMethodName  = "/api.v1.ManagementService/UpdateAlgorithm"
 	ManagementService_ListAlgorithms_FullMethodName   = "/api.v1.ManagementService/ListAlgorithms"
+	ManagementService_GetAlgorithm_FullMethodName     = "/api.v1.ManagementService/GetAlgorithm"
 	ManagementService_CreateVersion_FullMethodName    = "/api.v1.ManagementService/CreateVersion"
 	ManagementService_RollbackVersion_FullMethodName  = "/api.v1.ManagementService/RollbackVersion"
 	ManagementService_UploadPresetData_FullMethodName = "/api.v1.ManagementService/UploadPresetData"
 	ManagementService_ListPresetData_FullMethodName   = "/api.v1.ManagementService/ListPresetData"
 	ManagementService_ListJobs_FullMethodName         = "/api.v1.ManagementService/ListJobs"
 	ManagementService_GetJobDetail_FullMethodName     = "/api.v1.ManagementService/GetJobDetail"
+	ManagementService_GetServerInfo_FullMethodName    = "/api.v1.ManagementService/GetServerInfo"
 )
 
 // ManagementServiceClient is the client API for ManagementService service.
@@ -37,12 +39,14 @@ type ManagementServiceClient interface {
 	CreateAlgorithm(ctx context.Context, in *CreateAlgorithmRequest, opts ...grpc.CallOption) (*Algorithm, error)
 	UpdateAlgorithm(ctx context.Context, in *UpdateAlgorithmRequest, opts ...grpc.CallOption) (*Algorithm, error)
 	ListAlgorithms(ctx context.Context, in *ListAlgorithmsRequest, opts ...grpc.CallOption) (*ListAlgorithmsResponse, error)
+	GetAlgorithm(ctx context.Context, in *GetAlgorithmRequest, opts ...grpc.CallOption) (*GetAlgorithmResponse, error)
 	CreateVersion(ctx context.Context, in *CreateVersionRequest, opts ...grpc.CallOption) (*Version, error)
 	RollbackVersion(ctx context.Context, in *RollbackVersionRequest, opts ...grpc.CallOption) (*Algorithm, error)
 	UploadPresetData(ctx context.Context, in *UploadDataRequest, opts ...grpc.CallOption) (*UploadDataResponse, error)
 	ListPresetData(ctx context.Context, in *ListPresetDataRequest, opts ...grpc.CallOption) (*ListPresetDataResponse, error)
 	ListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error)
 	GetJobDetail(ctx context.Context, in *GetJobDetailRequest, opts ...grpc.CallOption) (*JobDetail, error)
+	GetServerInfo(ctx context.Context, in *GetServerInfoRequest, opts ...grpc.CallOption) (*GetServerInfoResponse, error)
 }
 
 type managementServiceClient struct {
@@ -77,6 +81,16 @@ func (c *managementServiceClient) ListAlgorithms(ctx context.Context, in *ListAl
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListAlgorithmsResponse)
 	err := c.cc.Invoke(ctx, ManagementService_ListAlgorithms_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *managementServiceClient) GetAlgorithm(ctx context.Context, in *GetAlgorithmRequest, opts ...grpc.CallOption) (*GetAlgorithmResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetAlgorithmResponse)
+	err := c.cc.Invoke(ctx, ManagementService_GetAlgorithm_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -143,6 +157,16 @@ func (c *managementServiceClient) GetJobDetail(ctx context.Context, in *GetJobDe
 	return out, nil
 }
 
+func (c *managementServiceClient) GetServerInfo(ctx context.Context, in *GetServerInfoRequest, opts ...grpc.CallOption) (*GetServerInfoResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetServerInfoResponse)
+	err := c.cc.Invoke(ctx, ManagementService_GetServerInfo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ManagementServiceServer is the server API for ManagementService service.
 // All implementations must embed UnimplementedManagementServiceServer
 // for forward compatibility.
@@ -150,12 +174,14 @@ type ManagementServiceServer interface {
 	CreateAlgorithm(context.Context, *CreateAlgorithmRequest) (*Algorithm, error)
 	UpdateAlgorithm(context.Context, *UpdateAlgorithmRequest) (*Algorithm, error)
 	ListAlgorithms(context.Context, *ListAlgorithmsRequest) (*ListAlgorithmsResponse, error)
+	GetAlgorithm(context.Context, *GetAlgorithmRequest) (*GetAlgorithmResponse, error)
 	CreateVersion(context.Context, *CreateVersionRequest) (*Version, error)
 	RollbackVersion(context.Context, *RollbackVersionRequest) (*Algorithm, error)
 	UploadPresetData(context.Context, *UploadDataRequest) (*UploadDataResponse, error)
 	ListPresetData(context.Context, *ListPresetDataRequest) (*ListPresetDataResponse, error)
 	ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error)
 	GetJobDetail(context.Context, *GetJobDetailRequest) (*JobDetail, error)
+	GetServerInfo(context.Context, *GetServerInfoRequest) (*GetServerInfoResponse, error)
 	mustEmbedUnimplementedManagementServiceServer()
 }
 
@@ -175,6 +201,9 @@ func (UnimplementedManagementServiceServer) UpdateAlgorithm(context.Context, *Up
 func (UnimplementedManagementServiceServer) ListAlgorithms(context.Context, *ListAlgorithmsRequest) (*ListAlgorithmsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListAlgorithms not implemented")
 }
+func (UnimplementedManagementServiceServer) GetAlgorithm(context.Context, *GetAlgorithmRequest) (*GetAlgorithmResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetAlgorithm not implemented")
+}
 func (UnimplementedManagementServiceServer) CreateVersion(context.Context, *CreateVersionRequest) (*Version, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateVersion not implemented")
 }
@@ -192,6 +221,9 @@ func (UnimplementedManagementServiceServer) ListJobs(context.Context, *ListJobsR
 }
 func (UnimplementedManagementServiceServer) GetJobDetail(context.Context, *GetJobDetailRequest) (*JobDetail, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetJobDetail not implemented")
+}
+func (UnimplementedManagementServiceServer) GetServerInfo(context.Context, *GetServerInfoRequest) (*GetServerInfoResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetServerInfo not implemented")
 }
 func (UnimplementedManagementServiceServer) mustEmbedUnimplementedManagementServiceServer() {}
 func (UnimplementedManagementServiceServer) testEmbeddedByValue()                           {}
@@ -264,6 +296,24 @@ func _ManagementService_ListAlgorithms_Handler(srv interface{}, ctx context.Cont
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ManagementServiceServer).ListAlgorithms(ctx, req.(*ListAlgorithmsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ManagementService_GetAlgorithm_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAlgorithmRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ManagementServiceServer).GetAlgorithm(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ManagementService_GetAlgorithm_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ManagementServiceServer).GetAlgorithm(ctx, req.(*GetAlgorithmRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -376,6 +426,24 @@ func _ManagementService_GetJobDetail_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ManagementService_GetServerInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetServerInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ManagementServiceServer).GetServerInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ManagementService_GetServerInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ManagementServiceServer).GetServerInfo(ctx, req.(*GetServerInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ManagementService_ServiceDesc is the grpc.ServiceDesc for ManagementService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -394,6 +462,10 @@ var ManagementService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListAlgorithms",
 			Handler:    _ManagementService_ListAlgorithms_Handler,
+		},
+		{
+			MethodName: "GetAlgorithm",
+			Handler:    _ManagementService_GetAlgorithm_Handler,
 		},
 		{
 			MethodName: "CreateVersion",
@@ -418,6 +490,10 @@ var ManagementService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetJobDetail",
 			Handler:    _ManagementService_GetJobDetail_Handler,
+		},
+		{
+			MethodName: "GetServerInfo",
+			Handler:    _ManagementService_GetServerInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -5,7 +5,7 @@ package api.v1;
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "algorithm-platform/api/v1;v1";
+option go_package = "algorithm-platform/api/v1/proto;v1";
 
 service ManagementService {
   rpc CreateAlgorithm(CreateAlgorithmRequest) returns (Algorithm) {
@@ -25,6 +25,12 @@ service ManagementService {
   rpc ListAlgorithms(ListAlgorithmsRequest) returns (ListAlgorithmsResponse) {
     option (google.api.http) = {
       get: "/api/v1/algorithms"
+    };
+  }
+
+  rpc GetAlgorithm(GetAlgorithmRequest) returns (GetAlgorithmResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/algorithms/{id}"
     };
   }
 
@@ -66,6 +72,12 @@ service ManagementService {
       get: "/api/v1/jobs/{job_id}/detail"
     };
   }
+
+  rpc GetServerInfo(GetServerInfoRequest) returns (GetServerInfoResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/server/info"
+    };
+  }
 }
 
 message CreateAlgorithmRequest {
@@ -88,11 +100,11 @@ message UpdateAlgorithmRequest {
 }
 
 enum Platform {
-  PLATFORM_DOCKER = 0 [json_name = "docker"];
-  PLATFORM_LINUX_X86_64 = 1 [json_name = "linux_x86_64"];
-  PLATFORM_LINUX_ARM64 = 2 [json_name = "linux_arm64"];
-  PLATFORM_WINDOWS_X86_64 = 3 [json_name = "windows_x86_64"];
-  PLATFORM_MACOS_ARM64 = 4 [json_name = "macos_arm64"];
+  PLATFORM_DOCKER = 0;
+  PLATFORM_LINUX_X86_64 = 1;
+  PLATFORM_LINUX_ARM64 = 2;
+  PLATFORM_WINDOWS_X86_64 = 3;
+  PLATFORM_MACOS_ARM64 = 4;
 }
 
 message Algorithm {
@@ -101,11 +113,13 @@ message Algorithm {
   string description = 3 [json_name = "description"];
   string language = 4 [json_name = "language"];
   Platform platform = 5 [json_name = "platform"];
-  string entrypoint = 6 [json_name = "entrypoint"];
-  repeated string tags = 7 [json_name = "tags"];
-  string current_version_id = 8 [json_name = "current_version_id"];
-  google.protobuf.Timestamp created_at = 9 [json_name = "created_at"];
-  google.protobuf.Timestamp updated_at = 10 [json_name = "updated_at"];
+  string category = 6 [json_name = "category"];
+  string entrypoint = 7 [json_name = "entrypoint"];
+  repeated string tags = 8 [json_name = "tags"];
+  string preset_data_id = 9 [json_name = "preset_data_id"];
+  string current_version_id = 10 [json_name = "current_version_id"];
+  google.protobuf.Timestamp created_at = 11 [json_name = "created_at"];
+  google.protobuf.Timestamp updated_at = 12 [json_name = "updated_at"];
 }
 
 message ListAlgorithmsRequest {
@@ -118,6 +132,15 @@ message ListAlgorithmsRequest {
 message ListAlgorithmsResponse {
   repeated Algorithm algorithms = 1 [json_name = "algorithms"];
   int32 total = 2 [json_name = "total"];
+}
+
+message GetAlgorithmRequest {
+  string id = 1 [json_name = "id"];
+}
+
+message GetAlgorithmResponse {
+  Algorithm algorithm = 1 [json_name = "algorithm"];
+  repeated Version versions = 2 [json_name = "versions"];
 }
 
 message CreateVersionRequest {
@@ -214,4 +237,13 @@ message JobDetail {
   google.protobuf.Timestamp finished_at = 12 [json_name = "finished_at"];
   int32 cost_time_ms = 13 [json_name = "cost_time_ms"];
   string worker_id = 14 [json_name = "worker_id"];
+}
+
+message GetServerInfoRequest {}
+
+message GetServerInfoResponse {
+  string os = 1 [json_name = "os"];
+  string arch = 2 [json_name = "arch"];
+  Platform platform = 3 [json_name = "platform"];
+  string platform_name = 4 [json_name = "platform_name"];
 }

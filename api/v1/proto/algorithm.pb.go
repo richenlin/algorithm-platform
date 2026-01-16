@@ -468,7 +468,7 @@ const file_proto_algorithm_proto_rawDesc = "" +
 	"costTimeMs2\xf7\x01\n" +
 	"\x10AlgorithmService\x12y\n" +
 	"\x10ExecuteAlgorithm\x12\x16.api.v1.ExecuteRequest\x1a\x17.api.v1.ExecuteResponse\"4\x82\xd3\xe4\x93\x02.:\x01*\")/api/v1/algorithms/{algorithm_id}/execute\x12h\n" +
-	"\fGetJobStatus\x12\x1b.api.v1.GetJobStatusRequest\x1a\x1c.api.v1.GetJobStatusResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\x12\x15/api/v1/jobs/{job_id}B\x1eZ\x1calgorithm-platform/api/v1;v1b\x06proto3"
+	"\fGetJobStatus\x12\x1b.api.v1.GetJobStatusRequest\x1a\x1c.api.v1.GetJobStatusResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\x12\x15/api/v1/jobs/{job_id}B$Z\"algorithm-platform/api/v1/proto;v1b\x06proto3"
 
 var (
 	file_proto_algorithm_proto_rawDescOnce sync.Once

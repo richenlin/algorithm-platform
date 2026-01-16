@@ -1,60 +1,21 @@
 {
   "project": "算法管理平台",
   "features": [
-    {
-      "id": "F001",
-      "name": "核心调度引擎与 gRPC 框架搭建",
-      "priority": 1,
-      "status": "completed"
-    },
-    {
-      "id": "F002",
-      "name": "Docker 调度器（资源限制、超时控制）",
-      "priority": 2,
-      "status": "completed"
-    },
-    {
-      "id": "F003",
-      "name": "MinIO 集成（Smart Runner）",
-      "priority": 4,
-      "status": "completed"
-    },
-    {
-      "id": "F004",
-      "name": "Redis 缓存层",
-      "priority": 3,
-      "status": "completed"
-    },
-    {
-      "id": "F005",
-      "name": "算法管理模块（版本控制）",
-      "priority": 5,
-      "status": "completed"
-    },
-    {
-      "id": "F006",
-      "name": "数据管理模块（预置数据）",
-      "priority": 6,
-      "status": "completed"
-    },
-    {
-      "id": "F007",
-      "name": "任务监控模块",
-      "priority": 7,
-      "status": "completed"
-    },
-    {
-      "id": "F008",
-      "name": "Dashboard 前端（Vue3）",
-      "priority": 8,
-      "status": "completed"
-    },
-    {
-      "id": "F008",
-      "name": "Dashboard 前端（Vue3）",
-      "priority": 9,
-      "status": "completed"
-    }
+    {"id": "F001", "name": "核心调度引擎与 gRPC 架构搭建", "priority": 1, "status": "completed"},
+    {"id": "F002", "name": "Docker 调度器（资源限制、超时控制）", "priority": 2, "status": "completed"},
+    {"id": "F003", "name": "MinIO 集成（Smart Runner）", "priority": 4, "status": "completed"},
+    {"id": "F004", "name": "Redis 缓存层", "priority": 3, "status": "completed"},
+    {"id": "F005", "name": "算法管理模块（版本控制）", "priority": 5, "status": "completed"},
+    {"id": "F006", "name": "数据管理模块（预置数据）", "priority": 6, "status": "completed"},
+    {"id": "F007", "name": "任务监控模块", "priority": 7, "status": "completed"},
+    {"id": "F008", "name": "Dashboard 前端（Vue3）", "priority": 9, "status": "completed"},
+    {"id": "F009", "name": "Matlab/C++ 镜像优化", "priority": 9, "status": "completed"},
+    {"id": "F010", "name": "导航菜单调整", "priority": 10, "status": "pending"},
+    {"id": "F011", "name": "预置数据录入功能", "priority": 10, "status": "pending"},
+    {"id": "F012", "name": "算法平台类型检测和选择", "priority": 10, "status": "pending"},
+    {"id": "F013", "name": "算法类别标签化（支持新增）", "priority": 10, "status": "pending"},
+    {"id": "F014", "name": "算法文件上传（MinIO）", "priority": 10, "status": "pending"},
+    {"id": "F015", "name": "版本自动递增和回滚", "priority": 10, "status": "pending"}
   ]
 }
   ]

@@ -1,38 +1,95 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useAlgorithmStore } from '../stores/algorithm'
+import { useDataStore } from '../stores/data'
 
 const algorithmStore = useAlgorithmStore()
+const dataStore = useDataStore()
 const showCreateModal = ref(false)
 const formData = ref({
   name: '',
   description: '',
   language: 'python',
-  platform: 'docker',
+  platform: 'LINUX_X86_64',
   category: 'general',
-  entrypoint: 'main.py'
+  entrypoint: 'main.py',
+  tags: [] as string[],
+  presetDataId: ''
 })
 
-onMounted(() => {
-  algorithmStore.fetchAlgorithms()
+const newTag = ref('')
+const selectedFile = ref<File | undefined>(undefined)
+
+const availableTags = computed(() => {
+  const allTags = algorithmStore.algorithms.flatMap(alg => alg.tags || [])
+  return [...new Set(allTags)]
 })
+
+const platformOptions = [
+  { value: 'docker', label: 'Docker' },
+  { value: 'LINUX_X86_64', label: 'Linux x86_64' },
+  { value: 'LINUX_ARM64', label: 'Linux ARM64' },
+  { value: 'WINDOWS_X86_64', label: 'Windows x86_64' },
+  { value: 'MACOS_ARM64', label: 'macOS ARM64' }
+]
+
+const presetDataList = computed(() => dataStore.files)
+
+onMounted(async () => {
+  await algorithmStore.fetchAlgorithms()
+  await dataStore.fetchFiles()
+})
+
+function addTag() {
+  const tag = newTag.value.trim()
+  if (tag && !formData.value.tags.includes(tag)) {
+    formData.value.tags.push(tag)
+  }
+  newTag.value = ''
+}
+
+function removeTag(tag: string) {
+  const index = formData.value.tags.indexOf(tag)
+  if (index !== -1) {
+    formData.value.tags.splice(index, 1)
+  }
+}
+
+function handleFileChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files.length > 0) {
+    selectedFile.value = target.files[0]
+  }
+}
 
 async function handleSubmit() {
   try {
-    await algorithmStore.createAlgorithm(formData.value)
-    showCreateModal.value = false
-    formData.value = {
-      name: '',
-      description: '',
-      language: 'python',
-      platform: 'docker',
-      category: 'general',
-      entrypoint: 'main.py'
+    const formDataToSend = {
+      ...formData.value,
+      file: selectedFile.value
     }
+    await algorithmStore.createAlgorithm(formDataToSend)
+    showCreateModal.value = false
+    resetForm()
   } catch (error) {
     console.error('Failed to create algorithm:', error)
   }
+}
+
+function resetForm() {
+  formData.value = {
+    name: '',
+    description: '',
+    language: 'python',
+    platform: 'LINUX_X86_64',
+    category: 'general',
+    entrypoint: 'main.py',
+    tags: [],
+    presetDataId: ''
+  }
+  selectedFile.value = undefined
+  newTag.value = ''
 }
 </script>
 
@@ -51,17 +108,21 @@ async function handleSubmit() {
     </div>
 
     <div v-else class="algorithms-grid">
-      <div v-for="algorithm in algorithmStore.algorithms" :key="algorithm.id" class="algorithm-card">
+      <div v-for="algorithm in algorithmStore.algorithms" :key="algorithm.id" 
+           class="algorithm-card">
         <div class="card-header">
           <div>
             <h3>{{ algorithm.name }}</h3>
-            <span class="language-tag">{{ algorithm.language }}</span>
+            <div class="meta-badges">
+              <span class="platform-badge">{{ algorithm.platform }}</span>
+              <span class="language-tag">{{ algorithm.language }}</span>
+            </div>
           </div>
         </div>
         <p class="description">{{ algorithm.description }}</p>
         <div class="meta">
+          <span>平台: {{ algorithm.platform }}</span>
           <span>类别: {{ algorithm.category }}</span>
-          <span>版本: {{ algorithm.currentVersionId }}</span>
         </div>
         <RouterLink :to="`/algorithms/${algorithm.id}`" class="view-btn">
           查看详情 <span class="arrow">→</span>
@@ -85,6 +146,7 @@ async function handleSubmit() {
             <label>描述 <span class="required">*</span></label>
             <textarea v-model="formData.description" rows="3" placeholder="描述算法用途" required></textarea>
           </div>
+          
           <div class="form-row">
             <div class="form-item">
               <label>语言</label>
@@ -93,34 +155,81 @@ async function handleSubmit() {
                 <option value="matlab">Matlab</option>
                 <option value="cpp">C++</option>
                 <option value="java">Java</option>
+                <option value="r">R</option>
               </select>
             </div>
             <div class="form-item">
               <label>平台</label>
               <select v-model="formData.platform">
-                <option value="docker">Docker</option>
+                <option v-for="opt in platformOptions" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </option>
               </select>
             </div>
           </div>
-          <div class="form-row">
-            <div class="form-item">
-              <label>类别</label>
-              <select v-model="formData.category">
-                <option value="general">通用</option>
-                <option value="ml">机器学习</option>
-                <option value="cv">计算机视觉</option>
-                <option value="nlp">自然语言处理</option>
-                <option value="optimization">优化</option>
-              </select>
+
+          <div class="form-item">
+            <label>入口文件 <span class="required">*</span></label>
+            <input v-model="formData.entrypoint" placeholder="例如: main.py" required />
+          </div>
+
+          <div class="form-item">
+            <label>算法标签（可新增，回车或逗号分隔）</label>
+            <div class="tags-input">
+              <div class="tags-list">
+                <span v-for="tag in formData.tags" :key="tag" class="tag">
+                  {{ tag }}
+                  <span @click="removeTag(tag)" class="remove-tag">×</span>
+                </span>
+              </div>
+              <input 
+                v-model="newTag" 
+                @keyup.enter="addTag"
+                @keyup.comma="addTag"
+                placeholder="输入标签..."
+              />
+              />
             </div>
-            <div class="form-item">
-              <label>入口文件 <span class="required">*</span></label>
-              <input v-model="formData.entrypoint" placeholder="例如: main.py" required />
+            <div v-if="availableTags.length > 0" class="available-tags">
+              <span class="hint">已存在的标签：</span>
+              <span v-for="tag in availableTags" :key="tag" class="suggested-tag" @click="formData.tags.includes(tag) || formData.tags.push(tag)">
+                {{ tag }}
+              </span>
+            </div>
             </div>
           </div>
+
+          <div class="form-item">
+            <label>选择预置数据（作为计算依据）</label>
+            <select v-model="formData.presetDataId">
+              <option value="">不选择预置数据</option>
+              <option v-for="data in presetDataList" :key="data.id" :value="data.id">
+                {{ data.filename }} - {{ data.category }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-item">
+            <label>上传算法文件（ZIP 格式，可选）</label>
+            <div class="file-upload">
+              <input 
+                type="file" 
+                @change="handleFileChange"
+                accept=".zip"
+                id="algorithm-file"
+              />
+              <label for="algorithm-file" class="upload-btn">
+                <span class="icon">📁</span>
+                <span class="text">选择文件</span>
+              </label>
+              <span v-if="selectedFile" class="file-name">{{ selectedFile.name }}</span>
+            </div>
+            <span class="hint">文件将自动保存到 MinIO 并创建第一个版本</span>
+          </div>
+
           <div class="modal-footer">
-            <button class="secondary" @click="showCreateModal = false">取消</button>
-             <button class="btn-primary">创建</button>
+            <button class="secondary" type="button" @click="showCreateModal = false">取消</button>
+            <button type="submit" class="btn-primary">创建</button>
           </div>
         </form>
       </div>
@@ -148,19 +257,9 @@ async function handleSubmit() {
   color: var(--text-primary);
 }
 
-button.btn-primary {
-  background: var(--accent-primary);
-  color: #ffffff;
-  border: none;
-}
-
-button.btn-primary:hover {
-  background: var(--accent-hover);
-}
-
 .algorithms-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: var(--space-lg);
 }
 
@@ -212,6 +311,22 @@ button.btn-primary:hover {
   margin: 0;
 }
 
+.meta-badges {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+.platform-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: var(--bg-secondary);
+  color: var(--accent-primary);
+  border: 1px solid var(--accent-primary);
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
 .language-tag {
   font-size: 11px;
   padding: 2px 8px;
@@ -235,6 +350,7 @@ button.btn-primary:hover {
   gap: var(--space-lg);
   font-size: 13px;
   color: var(--text-muted);
+  flex-wrap: wrap;
 }
 
 .view-btn {
@@ -311,7 +427,7 @@ button.btn-primary:hover {
   background: var(--bg-card);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  max-width: 600px;
+  max-width: 700px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
@@ -379,6 +495,100 @@ form {
   gap: var(--space-lg);
 }
 
+.tags-input {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.tags-list {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.tags-list .tag {
+  background: rgba(64, 158, 255, 0.15);
+  border: 1px solid rgba(64, 158, 255, 0.3);
+}
+
+.remove-tag {
+  cursor: pointer;
+  margin-left: 4px;
+  color: var(--text-muted);
+  transition: color var(--transition-fast);
+}
+
+.remove-tag:hover {
+  color: var(--danger);
+}
+
+.available-tags {
+  padding: var(--space-sm);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.hint {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.suggested-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  margin-right: var(--space-xs);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.suggested-tag:hover {
+  background: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-primary);
+}
+
+.file-upload {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.upload-btn:hover {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: white;
+}
+
+.upload-btn .icon {
+  font-size: var(--font-size-lg);
+}
+
+.file-name {
+  font-size: var(--font-size-sm);
+  color: var(--accent-primary);
+  font-weight: 500;
+}
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;
@@ -386,6 +596,16 @@ form {
   margin-top: var(--space-xl);
   padding-top: var(--space-lg);
   border-top: 1px solid var(--border-light);
+}
+
+button.btn-primary {
+  background: var(--accent-primary);
+  color: #ffffff;
+  border: none;
+}
+
+button.btn-primary:hover {
+  background: var(--accent-hover);
 }
 
 button.secondary {
@@ -397,5 +617,9 @@ button.secondary {
 button.secondary:hover {
   color: var(--text-primary);
   border-color: var(--accent-primary);
+}
+
+[type="file"] {
+  display: none;
 }
 </style>

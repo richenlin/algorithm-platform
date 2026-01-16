@@ -11,6 +11,7 @@ export interface Algorithm {
   currentVersionId: string
   createdAt: string
   updatedAt: string
+  tags?: string[]
 }
 
 export interface Version {

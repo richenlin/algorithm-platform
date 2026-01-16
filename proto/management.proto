@@ -38,6 +38,7 @@ service ManagementService {
   rpc RollbackVersion(RollbackVersionRequest) returns (Algorithm) {
     option (google.api.http) = {
       post: "/api/v1/algorithms/{algorithm_id}/versions/{version_id}/rollback"
+      body: "*"
     };
   }
 
@@ -68,19 +69,30 @@ service ManagementService {
 }
 
 message CreateAlgorithmRequest {
-  string name = 1;
-  string description = 2;
-  string language = 3;
-  string platform = 4;
-  string category = 5;
-  string entrypoint = 6;
+  string name = 1 [json_name = "name"];
+  string description = 2 [json_name = "description"];
+  string language = 3 [json_name = "language"];
+  Platform platform = 4 [json_name = "platform"];
+  string entrypoint = 5 [json_name = "entrypoint"];
+  repeated string tags = 6 [json_name = "tags"];
+  string preset_data_id = 7 [json_name = "preset_data_id"];
+  bytes file_data = 8 [json_name = "file_data"];
+  string file_name = 9 [json_name = "file_name"];
 }
 
 message UpdateAlgorithmRequest {
-  string id = 1;
-  string name = 2;
-  string description = 3;
-  string category = 4;
+  string id = 1 [json_name = "id"];
+  string name = 2 [json_name = "name"];
+  string description = 3 [json_name = "description"];
+  repeated string tags = 4 [json_name = "tags"];
+}
+
+enum Platform {
+  PLATFORM_DOCKER = 0 [json_name = "docker"];
+  PLATFORM_LINUX_X86_64 = 1 [json_name = "linux_x86_64"];
+  PLATFORM_LINUX_ARM64 = 2 [json_name = "linux_arm64"];
+  PLATFORM_WINDOWS_X86_64 = 3 [json_name = "windows_x86_64"];
+  PLATFORM_MACOS_ARM64 = 4 [json_name = "macos_arm64"];
 }
 
 message Algorithm {
@@ -88,9 +100,9 @@ message Algorithm {
   string name = 2 [json_name = "name"];
   string description = 3 [json_name = "description"];
   string language = 4 [json_name = "language"];
-  string platform = 5 [json_name = "platform"];
-  string category = 6 [json_name = "category"];
-  string entrypoint = 7 [json_name = "entrypoint"];
+  Platform platform = 5 [json_name = "platform"];
+  string entrypoint = 6 [json_name = "entrypoint"];
+  repeated string tags = 7 [json_name = "tags"];
   string current_version_id = 8 [json_name = "current_version_id"];
   google.protobuf.Timestamp created_at = 9 [json_name = "created_at"];
   google.protobuf.Timestamp updated_at = 10 [json_name = "updated_at"];
@@ -109,9 +121,11 @@ message ListAlgorithmsResponse {
 }
 
 message CreateVersionRequest {
-  string algorithm_id = 1;
-  string source_code_zip_url = 2;
-  string commit_message = 3;
+  string algorithm_id = 1 [json_name = "algorithm_id"];
+  string source_code_zip_url = 2 [json_name = "source_code_zip_url"];
+  string commit_message = 3 [json_name = "commit_message"];
+  bytes file_data = 4 [json_name = "file_data"];
+  string file_name = 5 [json_name = "file_name"];
 }
 
 message Version {
@@ -119,35 +133,32 @@ message Version {
   string algorithm_id = 2 [json_name = "algorithm_id"];
   int32 version_number = 3 [json_name = "version_number"];
   string minio_path = 4 [json_name = "minio_path"];
-  string commit_message = 5 [json_name = "commit_message"];
-  google.protobuf.Timestamp created_at = 6 [json_name = "created_at"];
+  string source_code_file = 5 [json_name = "source_code_file"];
+  string commit_message = 6 [json_name = "commit_message"];
+  google.protobuf.Timestamp created_at = 7 [json_name = "created_at"];
 }
 
 message RollbackVersionRequest {
-  string algorithm_id = 1;
-  string version_id = 2;
+  string algorithm_id = 1 [json_name = "algorithm_id"];
+  string version_id = 2 [json_name = "version_id"];
 }
 
 message UploadDataRequest {
-  string filename = 1;
-  string category = 2;
-  string minio_path = 3;
+  string filename = 1 [json_name = "filename"];
+  string category = 2 [json_name = "category"];
+  bytes file_data = 3 [json_name = "file_data"];
+  string minio_path = 4 [json_name = "minio_path"];
 }
 
 message UploadDataResponse {
-  string file_id = 1;
-  string minio_url = 2;
+  string file_id = 1 [json_name = "file_id"];
+  string minio_url = 2 [json_name = "minio_url"];
 }
 
 message ListPresetDataRequest {
-  string category = 1;
-  int32 page = 2;
-  int32 page_size = 3;
-}
-
-message ListPresetDataResponse {
-  repeated PresetData files = 1;
-  int32 total = 2;
+  string category = 1 [json_name = "category"];
+  int32 page = 2 [json_name = "page"];
+  int32 page_size = 3 [json_name = "page_size"];
 }
 
 message PresetData {
@@ -158,16 +169,16 @@ message PresetData {
   google.protobuf.Timestamp created_at = 5 [json_name = "created_at"];
 }
 
-message ListJobsRequest {
-  string algorithm_id = 1;
-  string status = 2;
-  int32 page = 3;
-  int32 page_size = 4;
+message ListPresetDataResponse {
+  repeated PresetData files = 1 [json_name = "files"];
+  int32 total = 2 [json_name = "total"];
 }
 
-message ListJobsResponse {
-  repeated JobSummary jobs = 1;
-  int32 total = 2;
+message ListJobsRequest {
+  string algorithm_id = 1 [json_name = "algorithm_id"];
+  string status = 2 [json_name = "status"];
+  int32 page = 3 [json_name = "page"];
+  int32 page_size = 4 [json_name = "page_size"];
 }
 
 message JobSummary {
@@ -179,8 +190,13 @@ message JobSummary {
   int32 cost_time_ms = 6 [json_name = "cost_time_ms"];
 }
 
+message ListJobsResponse {
+  repeated JobSummary jobs = 1 [json_name = "jobs"];
+  int32 total = 2 [json_name = "total"];
+}
+
 message GetJobDetailRequest {
-  string job_id = 1;
+  string job_id = 1 [json_name = "job_id"];
 }
 
 message JobDetail {

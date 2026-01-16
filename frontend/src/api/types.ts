@@ -8,52 +8,52 @@ export interface Algorithm {
   platform: string
   category: string
   entrypoint: string
-  current_version_id: string
-  created_at: string
-  updated_at: string
+  currentVersionId: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Version {
   id: string
-  algorithm_id: string
-  version_number: number
-  minio_path: string
-  commit_message: string
-  created_at: string
+  algorithmId: string
+  versionNumber: number
+  minioPath: string
+  commitMessage: string
+  createdAt: string
 }
 
 export interface PresetData {
   id: string
   filename: string
   category: string
-  minio_url: string
-  created_at: string
+  minioUrl: string
+  createdAt: string
 }
 
 export interface JobSummary {
-  job_id: string
-  algorithm_id: string
-  algorithm_name: string
+  jobId: string
+  algorithmId: string
+  algorithmName: string
   status: string
-  created_at: string
-  cost_time_ms: number
+  createdAt: string
+  costTimeMs: number
 }
 
 export interface JobDetail {
-  job_id: string
-  algorithm_id: string
-  algorithm_name: string
+  jobId: string
+  algorithmId: string
+  algorithmName: string
   mode: string
   status: string
-  input_params: string
-  input_url: string
-  output_url: string
-  log_url: string
-  created_at: string
-  started_at: string
-  finished_at: string
-  cost_time_ms: number
-  worker_id: string
+  inputParams: string
+  inputUrl: string
+  outputUrl: string
+  logUrl: string
+  createdAt: string
+  startedAt: string
+  finishedAt: string
+  costTimeMs: number
+  workerId: string
 }
 
 export const algorithmApi = {
@@ -89,7 +89,7 @@ export const jobApi = {
     api.get<JobDetail>(`/api/v1/jobs/${jobId}/detail`),
 
   status: (jobId: string) =>
-    api.get<{ job_id: string; status: string; result_url: string; started_at: string; finished_at: string; cost_time_ms: number }>(`/api/v1/jobs/${jobId}`),
+    api.get<{ jobId: string; status: string; result_url: string; started_at: string; finished_at: string; cost_time_ms: number }>(`/api/v1/jobs/${jobId}`),
 
   execute: (algorithmId: string, data: {
     mode: string
@@ -100,5 +100,5 @@ export const jobApi = {
     resource_config?: { cpu_limit: number; memory_limit: string }
     timeout_seconds?: number
   }) =>
-    api.post<{ job_id: string; status: string; result_url: string; message: string }>(`/api/v1/algorithms/${algorithmId}/execute`, data)
+    api.post<{ jobId: string; status: string; result_url: string; message: string }>(`/api/v1/algorithms/${algorithmId}/execute`, data)
 }

@@ -53,7 +53,7 @@ async function handleExecute() {
     }
     const result = await jobStore.executeAlgorithm(algorithmId.value, data)
     showExecuteModal.value = false
-    router.push(`/jobs/${result.job_id}`)
+    router.push(`/jobs/${result.jobId}`)
   } catch (error) {
     console.error('Failed to execute algorithm:', error)
   }
@@ -65,6 +65,16 @@ async function handleRollback(versionId: string) {
   } catch (error) {
     console.error('Failed to rollback version:', error)
   }
+}
+
+function getStatusClass(status: string) {
+  const map: Record<string, string> = {
+    pending: 'status-pending',
+    running: 'status-running',
+    completed: 'status-success',
+    failed: 'status-failed'
+  }
+  return map[status] || ''
 }
 </script>
 
@@ -101,11 +111,11 @@ async function handleRollback(versionId: string) {
             </div>
             <div>
               <label>当前版本</label>
-              <span>{{ algorithm.current_version_id }}</span>
+              <span>{{ algorithm.currentVersionId }}</span>
             </div>
             <div>
               <label>创建时间</label>
-              <span>{{ new Date(algorithm.created_at).toLocaleString() }}</span>
+              <span>{{ new Date(algorithm.createdAt).toLocaleString() }}</span>
             </div>
           </div>
           <p class="description">{{ algorithm.description }}</p>
@@ -128,11 +138,11 @@ async function handleRollback(versionId: string) {
             </thead>
             <tbody>
               <tr v-for="version in algorithmStore.versions" :key="version.id">
-                <td>v{{ version.version_number }}</td>
-                <td>{{ version.commit_message }}</td>
-                <td>{{ new Date(version.created_at).toLocaleString() }}</td>
+                 <td>v{{ version.versionNumber }}</td>
+                 <td>{{ version.commitMessage }}</td>
+                 <td>{{ new Date(version.createdAt).toLocaleString() }}</td>
                 <td>
-                  <button v-if="version.id !== algorithm.current_version_id" @click="handleRollback(version.id)" size="small">
+                  <button v-if="version.id !== algorithm.currentVersionId" @click="handleRollback(version.id)" size="small">
                     回滚
                   </button>
                 </td>
@@ -155,15 +165,15 @@ async function handleRollback(versionId: string) {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="job in jobStore.jobs.slice(0, 10)" :key="job.job_id">
-                <td>{{ job.job_id }}</td>
-                <td>
-                  <span :class="['status-badge', `status-${job.status}`]">{{ job.status }}</span>
-                </td>
-                <td>{{ new Date(job.created_at).toLocaleString() }}</td>
-                <td>{{ job.cost_time_ms }}ms</td>
-                <td>
-                  <RouterLink :to="`/jobs/${job.job_id}`">查看</RouterLink>
+               <tr v-for="job in jobStore.jobs.slice(0, 10)" :key="job.jobId">
+                 <td>{{ job.jobId }}</td>
+                 <td>
+                   <span :class="['status-badge', getStatusClass(job.status)]">{{ job.status }}</span>
+                 </td>
+                 <td>{{ new Date(job.createdAt).toLocaleString() }}</td>
+                 <td>{{ job.costTimeMs }}ms</td>
+                 <td>
+                   <RouterLink :to="`/jobs/${job.jobId}`">查看</RouterLink>
                 </td>
               </tr>
             </tbody>

@@ -41,7 +41,7 @@ export const useJobStore = defineStore('job', () => {
   async function checkJobStatus(jobId: string) {
     try {
       const response = await jobApi.status(jobId)
-      const index = jobs.value.findIndex(j => j.job_id === jobId)
+      const index = jobs.value.findIndex(j => j.jobId === jobId)
       if (index !== -1 && jobs.value[index]) {
         jobs.value[index].status = response.data.status
       }

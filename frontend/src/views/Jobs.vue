@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useJobStore } from '../stores/job'
+import { RouterLink } from 'vue-router'
 
 const jobStore = useJobStore()
 const filters = ref({
@@ -58,14 +59,16 @@ function getStatusClass(status: string) {
 
 <template>
   <div class="jobs">
-    <div class="header-actions">
+    <div class="header-actions fade-in-up">
       <h2>任务列表</h2>
-      <button :class="{ active: autoRefresh }" @click="toggleAutoRefresh">
-        {{ autoRefresh ? '停止自动刷新' : '自动刷新' }}
-      </button>
+      <div class="actions">
+        <button @click="toggleAutoRefresh" :class="{ active: autoRefresh }">
+          {{ autoRefresh ? '⏸ 停止' : '↻ 自动刷新' }}
+        </button>
+      </div>
     </div>
 
-    <div class="filters">
+    <div class="filters fade-in-up">
       <input v-model="filters.algorithm_id" placeholder="算法 ID" @input="fetchJobs" />
       <select v-model="filters.status" @change="fetchJobs">
         <option v-for="option in statusOptions" :key="option.value" :value="option.value">
@@ -74,9 +77,9 @@ function getStatusClass(status: string) {
       </select>
     </div>
 
-    <div v-if="jobStore.loading" class="loading">加载中...</div>
+    <div v-if="jobStore.loading" class="loading fade-in-up">加载中...</div>
 
-    <div v-else class="table-container">
+    <div v-else class="table-container fade-in-up">
       <table class="table">
         <thead>
           <tr>
@@ -89,16 +92,16 @@ function getStatusClass(status: string) {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="job in jobStore.jobs" :key="job.job_id">
-            <td><code>{{ job.job_id }}</code></td>
-            <td>{{ job.algorithm_name }}</td>
+          <tr v-for="job in jobStore.jobs" :key="job.jobId">
+            <td><code>{{ job.jobId }}</code></td>
+            <td>{{ job.algorithmName }}</td>
             <td>
               <span :class="['status-badge', getStatusClass(job.status)]">{{ job.status }}</span>
             </td>
-            <td>{{ new Date(job.created_at).toLocaleString() }}</td>
-            <td>{{ job.cost_time_ms }}ms</td>
+            <td>{{ new Date(job.createdAt).toLocaleString() }}</td>
+            <td>{{ job.costTimeMs }}ms</td>
             <td>
-              <RouterLink :to="`/jobs/${job.job_id}`">查看详情</RouterLink>
+              <RouterLink :to="`/jobs/${job.jobId}`" class="action-link">查看详情 →</RouterLink>
             </td>
           </tr>
         </tbody>
@@ -109,17 +112,39 @@ function getStatusClass(status: string) {
 </template>
 
 <style scoped>
+.jobs {
+  min-height: 100vh;
+  padding: var(--space-xl);
+}
+
 .header-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: calc(var(--grid) * 3);
+  margin-bottom: var(--space-xl);
+}
+
+.header-actions h2 {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-md);
+}
+
+button.active {
+  background: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-glow);
 }
 
 .filters {
   display: flex;
-  gap: calc(var(--grid) * 2);
-  margin-bottom: calc(var(--grid) * 3);
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
 }
 
 .filters input {
@@ -130,27 +155,22 @@ function getStatusClass(status: string) {
   width: 150px;
 }
 
-button.active {
-  background-color: var(--accent);
-  color: var(--bg-primary);
-  border-color: var(--accent);
-}
-
 .table-container {
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 2px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
-code {
-  font-size: 12px;
-  color: var(--text-secondary);
+.action-link {
+  color: var(--accent-primary);
+  font-weight: 500;
+  transition: all var(--transition-fast);
 }
 
-.empty {
-  text-align: center;
-  padding: calc(var(--grid) * 4);
-  color: var(--text-secondary);
+.action-link:hover {
+  color: var(--accent-secondary);
+  transform: translateX(4px);
 }
 </style>

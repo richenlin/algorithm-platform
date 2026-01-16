@@ -84,28 +84,28 @@ message UpdateAlgorithmRequest {
 }
 
 message Algorithm {
-  string id = 1;
-  string name = 2;
-  string description = 3;
-  string language = 4;
-  string platform = 5;
-  string category = 6;
-  string entrypoint = 7;
-  string current_version_id = 8;
-  google.protobuf.Timestamp created_at = 9;
-  google.protobuf.Timestamp updated_at = 10;
+  string id = 1 [json_name = "id"];
+  string name = 2 [json_name = "name"];
+  string description = 3 [json_name = "description"];
+  string language = 4 [json_name = "language"];
+  string platform = 5 [json_name = "platform"];
+  string category = 6 [json_name = "category"];
+  string entrypoint = 7 [json_name = "entrypoint"];
+  string current_version_id = 8 [json_name = "current_version_id"];
+  google.protobuf.Timestamp created_at = 9 [json_name = "created_at"];
+  google.protobuf.Timestamp updated_at = 10 [json_name = "updated_at"];
 }
 
 message ListAlgorithmsRequest {
-  string category = 1;
-  string language = 2;
-  int32 page = 3;
-  int32 page_size = 4;
+  string category = 1 [json_name = "category"];
+  string language = 2 [json_name = "language"];
+  int32 page = 3 [json_name = "page"];
+  int32 page_size = 4 [json_name = "page_size"];
 }
 
 message ListAlgorithmsResponse {
-  repeated Algorithm algorithms = 1;
-  int32 total = 2;
+  repeated Algorithm algorithms = 1 [json_name = "algorithms"];
+  int32 total = 2 [json_name = "total"];
 }
 
 message CreateVersionRequest {
@@ -115,12 +115,12 @@ message CreateVersionRequest {
 }
 
 message Version {
-  string id = 1;
-  string algorithm_id = 2;
-  int32 version_number = 3;
-  string minio_path = 4;
-  string commit_message = 5;
-  google.protobuf.Timestamp created_at = 6;
+  string id = 1 [json_name = "id"];
+  string algorithm_id = 2 [json_name = "algorithm_id"];
+  int32 version_number = 3 [json_name = "version_number"];
+  string minio_path = 4 [json_name = "minio_path"];
+  string commit_message = 5 [json_name = "commit_message"];
+  google.protobuf.Timestamp created_at = 6 [json_name = "created_at"];
 }
 
 message RollbackVersionRequest {
@@ -151,11 +151,11 @@ message ListPresetDataResponse {
 }
 
 message PresetData {
-  string id = 1;
-  string filename = 2;
-  string category = 3;
-  string minio_url = 4;
-  google.protobuf.Timestamp created_at = 5;
+  string id = 1 [json_name = "id"];
+  string filename = 2 [json_name = "filename"];
+  string category = 3 [json_name = "category"];
+  string minio_url = 4 [json_name = "minio_url"];
+  google.protobuf.Timestamp created_at = 5 [json_name = "created_at"];
 }
 
 message ListJobsRequest {
@@ -171,12 +171,12 @@ message ListJobsResponse {
 }
 
 message JobSummary {
-  string job_id = 1;
-  string algorithm_id = 2;
-  string algorithm_name = 3;
-  string status = 4;
-  google.protobuf.Timestamp created_at = 5;
-  int32 cost_time_ms = 6;
+  string job_id = 1 [json_name = "job_id"];
+  string algorithm_id = 2 [json_name = "algorithm_id"];
+  string algorithm_name = 3 [json_name = "algorithm_name"];
+  string status = 4 [json_name = "status"];
+  google.protobuf.Timestamp created_at = 5 [json_name = "created_at"];
+  int32 cost_time_ms = 6 [json_name = "cost_time_ms"];
 }
 
 message GetJobDetailRequest {
@@ -184,18 +184,18 @@ message GetJobDetailRequest {
 }
 
 message JobDetail {
-  string job_id = 1;
-  string algorithm_id = 2;
-  string algorithm_name = 3;
-  string mode = 4;
-  string status = 5;
-  string input_params = 6;
-  string input_url = 7;
-  string output_url = 8;
-  string log_url = 9;
-  google.protobuf.Timestamp created_at = 10;
-  google.protobuf.Timestamp started_at = 11;
-  google.protobuf.Timestamp finished_at = 12;
-  int32 cost_time_ms = 13;
-  string worker_id = 14;
+  string job_id = 1 [json_name = "job_id"];
+  string algorithm_id = 2 [json_name = "algorithm_id"];
+  string algorithm_name = 3 [json_name = "algorithm_name"];
+  string mode = 4 [json_name = "mode"];
+  string status = 5 [json_name = "status"];
+  string input_params = 6 [json_name = "input_params"];
+  string input_url = 7 [json_name = "input_url"];
+  string output_url = 8 [json_name = "output_url"];
+  string log_url = 9 [json_name = "log_url"];
+  google.protobuf.Timestamp created_at = 10 [json_name = "created_at"];
+  google.protobuf.Timestamp started_at = 11 [json_name = "started_at"];
+  google.protobuf.Timestamp finished_at = 12 [json_name = "finished_at"];
+  int32 cost_time_ms = 13 [json_name = "cost_time_ms"];
+  string worker_id = 14 [json_name = "worker_id"];
 }

@@ -76,11 +76,11 @@ function formatDuration(ms: number): string {
           <span v-if="job.status === 'running'" class="pulse">运行中...</span>
         </div>
         <div class="time-info">
-          <span v-if="job.started_at">
-            开始: {{ new Date(job.started_at).toLocaleString() }}
+          <span v-if="job.startedAt">
+            开始: {{ new Date(job.startedAt).toLocaleString() }}
           </span>
-          <span v-if="job.finished_at">
-            完成: {{ new Date(job.finished_at).toLocaleString() }}
+          <span v-if="job.finishedAt">
+            完成: {{ new Date(job.finishedAt).toLocaleString() }}
           </span>
         </div>
       </div>
@@ -91,11 +91,11 @@ function formatDuration(ms: number): string {
           <div class="info-grid">
             <div>
               <label>任务 ID</label>
-              <code>{{ job.job_id }}</code>
+              <code>{{ job.jobId }}</code>
             </div>
             <div>
               <label>算法名称</label>
-              <span>{{ job.algorithm_name }}</span>
+              <span>{{ job.algorithmName }}</span>
             </div>
             <div>
               <label>执行模式</label>
@@ -103,15 +103,15 @@ function formatDuration(ms: number): string {
             </div>
             <div>
               <label>Worker ID</label>
-              <code>{{ job.worker_id }}</code>
+              <code>{{ job.workerId }}</code>
             </div>
             <div>
               <label>创建时间</label>
-              <span>{{ new Date(job.created_at).toLocaleString() }}</span>
+              <span>{{ new Date(job.createdAt).toLocaleString() }}</span>
             </div>
             <div>
               <label>耗时</label>
-              <span>{{ formatDuration(job.cost_time_ms) }}</span>
+              <span>{{ formatDuration(job.costTimeMs) }}</span>
             </div>
           </div>
         </div>
@@ -119,16 +119,16 @@ function formatDuration(ms: number): string {
         <div class="section card">
           <h3>输入参数</h3>
           <div class="code-block">
-            <pre>{{ job.input_params }}</pre>
+            <pre>{{ job.inputParams }}</pre>
           </div>
         </div>
 
         <div class="section card">
           <h3>资源配置</h3>
           <div class="resource-info">
-            <span v-if="job.input_url">输入: <a :href="job.input_url" target="_blank">{{ job.input_url }}</a></span>
-            <span v-if="job.output_url">输出: <a :href="job.output_url" target="_blank">{{ job.output_url }}</a></span>
-            <span v-if="job.log_url">日志: <a :href="job.log_url" target="_blank">{{ job.log_url }}</a></span>
+            <span v-if="job.inputUrl">输入: <a :href="job.inputUrl" target="_blank">{{ job.inputUrl }}</a></span>
+            <span v-if="job.outputUrl">输出: <a :href="job.outputUrl" target="_blank">{{ job.outputUrl }}</a></span>
+            <span v-if="job.logUrl">日志: <a :href="job.logUrl" target="_blank">{{ job.logUrl }}</a></span>
           </div>
         </div>
 
@@ -137,9 +137,9 @@ function formatDuration(ms: number): string {
           <button @click="showLogs = !showLogs" size="small">
             {{ showLogs ? '隐藏' : '显示' }} 日志
           </button>
-          <div v-if="showLogs && job.log_url" class="code-block">
+          <div v-if="showLogs && job.logUrl" class="code-block">
             <div v-if="isLoading" class="loading">加载日志中...</div>
-            <pre v-else>日志 URL: {{ job.log_url }}</pre>
+            <pre v-else>日志 URL: {{ job.logUrl }}</pre>
           </div>
         </div>
       </div>

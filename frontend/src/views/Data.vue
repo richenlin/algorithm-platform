@@ -49,12 +49,14 @@ async function handleUpload() {
 
 <template>
   <div class="data">
-    <div class="header-actions fade-in-up">
+    <div class="header-actions">
       <h2>数据管理</h2>
-      <button @click="showUploadModal = true">+ 上传数据</button>
+      <button class="btn-primary" @click="showUploadModal = true">
+        <span>+</span> 上传数据
+      </button>
     </div>
 
-    <div class="filters fade-in-up">
+    <div class="filters">
       <select v-model="filters.category" @change="fetchFiles">
         <option v-for="option in categoryOptions" :key="option.value" :value="option.value">
           {{ option.label }}
@@ -62,9 +64,12 @@ async function handleUpload() {
       </select>
     </div>
 
-    <div v-if="dataStore.loading" class="loading fade-in-up">加载中...</div>
+    <div v-if="dataStore.loading" class="loading">
+      <div class="loading-spinner"></div>
+      <span>加载中...</span>
+    </div>
 
-    <div v-else class="table-container fade-in-up">
+    <div v-else class="table-wrapper">
       <table class="table">
         <thead>
           <tr>
@@ -86,24 +91,32 @@ async function handleUpload() {
             </td>
             <td>{{ new Date(file.createdAt).toLocaleString() }}</td>
             <td>
-              <a :href="file.minioUrl" target="_blank" download class="action-link">下载 →</a>
+              <a :href="file.minioUrl" target="_blank" download class="action-link">
+                下载 <span class="arrow">→</span>
+              </a>
             </td>
           </tr>
         </tbody>
       </table>
-      <div v-if="dataStore.files.length === 0" class="empty">暂无数据</div>
+      <div v-if="dataStore.files.length === 0" class="empty">
+        <span class="empty-icon">📁</span>
+        <span class="empty-text">暂无数据</span>
+      </div>
     </div>
 
-    <div v-if="showUploadModal" class="modal fade-in-up">
+    <div v-if="showUploadModal" class="modal">
       <div class="modal-backdrop" @click="showUploadModal = false"></div>
-      <div class="modal-content card">
-        <h3>上传数据</h3>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>上传数据</h3>
+          <button class="close-btn" @click="showUploadModal = false">×</button>
+        </div>
         <form @submit.prevent="handleUpload">
-          <div class="form-group">
-            <label>文件名</label>
+          <div class="form-item">
+            <label>文件名 <span class="required">*</span></label>
             <input v-model="uploadFormData.filename" placeholder="例如: data.csv" required />
           </div>
-          <div class="form-group">
+          <div class="form-item">
             <label>类别</label>
             <select v-model="uploadFormData.category">
               <option value="general">通用</option>
@@ -112,15 +125,15 @@ async function handleUpload() {
               <option value="reference">参考数据</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>MinIO 路径</label>
+          <div class="form-item">
+            <label>MinIO 路径 <span class="required">*</span></label>
             <input v-model="uploadFormData.minio_path" placeholder="例如: data/input/example.csv" required />
-            <small class="hint">例如: data/input/example.csv</small>
+            <span class="hint">例如: data/input/example.csv</span>
           </div>
-          <div class="modal-actions">
-            <button type="button" @click="showUploadModal = false" class="secondary">取消</button>
-            <button type="submit">上传</button>
-          </div>
+          <div class="modal-footer">
+            <button class="secondary" @click="showUploadModal = false">取消</button>
+             <button class="btn-primary">上传</button>
+           </div>
         </form>
       </div>
     </div>
@@ -131,6 +144,7 @@ async function handleUpload() {
 .data {
   min-height: 100vh;
   padding: var(--space-xl);
+  background: var(--bg-secondary);
 }
 
 .header-actions {
@@ -142,7 +156,8 @@ async function handleUpload() {
 
 .header-actions h2 {
   font-size: var(--font-size-2xl);
-  font-weight: 700;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .filters {
@@ -151,11 +166,14 @@ async function handleUpload() {
 
 .filters select {
   width: 200px;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
 }
 
-.table-container {
+.table-wrapper {
   background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
@@ -168,42 +186,137 @@ async function handleUpload() {
   text-overflow: ellipsis;
   white-space: nowrap;
   vertical-align: middle;
-  color: var(--text-secondary);
+  color: var(--accent-primary);
 }
 
 .url-link:hover {
-  color: var(--accent-primary);
+  color: var(--accent-hover);
+  text-decoration: underline;
 }
 
 .action-link {
   color: var(--accent-primary);
   font-weight: 500;
   transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
 }
 
 .action-link:hover {
-  color: var(--accent-secondary);
+  color: var(--accent-hover);
+}
+
+.arrow {
+  transition: transform var(--transition-fast);
+  display: inline-block;
+}
+
+.action-link:hover .arrow {
   transform: translateX(4px);
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  padding: var(--space-2xl);
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-default);
+  border-top-color: var(--accent-primary);
+  border-radius: var(--radius-circle);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.empty {
+  text-align: center;
+  padding: var(--space-2xl);
+  color: var(--text-muted);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: var(--space-md);
+  display: block;
+}
+
+.empty-text {
+  font-size: var(--font-size-base);
 }
 
 .modal-content {
   position: relative;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   max-width: 500px;
   width: 100%;
 }
 
-.form-group {
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-lg);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.modal-header h3 {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.close-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-xl);
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.close-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+form {
+  padding: var(--space-lg);
+}
+
+.form-item {
   margin-bottom: var(--space-md);
 }
 
-.form-group label {
+.form-item label {
   display: block;
   margin-bottom: var(--space-sm);
   font-size: var(--font-size-sm);
   font-weight: 500;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  color: var(--text-primary);
+}
+
+.required {
+  color: var(--danger);
+  margin-left: 2px;
 }
 
 .hint {
@@ -213,23 +326,23 @@ async function handleUpload() {
   color: var(--text-muted);
 }
 
-.modal-actions {
+.modal-footer {
   display: flex;
+  justify-content: flex-end;
   gap: var(--space-md);
   margin-top: var(--space-xl);
   padding-top: var(--space-lg);
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--border-light);
 }
 
 button.secondary {
-  background: transparent;
+  background: #ffffff;
+  color: var(--text-secondary);
   border: 1px solid var(--border-default);
 }
 
 button.secondary:hover {
-  background: var(--bg-tertiary);
   color: var(--text-primary);
-  border-color: var(--border-default);
-  box-shadow: none;
+  border-color: var(--accent-primary);
 }
 </style>

@@ -59,16 +59,17 @@ function getStatusClass(status: string) {
 
 <template>
   <div class="jobs">
-    <div class="header-actions fade-in-up">
+    <div class="header-actions">
       <h2>任务列表</h2>
       <div class="actions">
-        <button @click="toggleAutoRefresh" :class="{ active: autoRefresh }">
-          {{ autoRefresh ? '⏸ 停止' : '↻ 自动刷新' }}
+        <button :class="{ 'refresh-btn': true, active: autoRefresh }" @click="toggleAutoRefresh">
+          <span>{{ autoRefresh ? '⏸' : '↻' }}</span>
+          {{ autoRefresh ? '停止刷新' : '自动刷新' }}
         </button>
       </div>
     </div>
 
-    <div class="filters fade-in-up">
+    <div class="filters">
       <input v-model="filters.algorithm_id" placeholder="算法 ID" @input="fetchJobs" />
       <select v-model="filters.status" @change="fetchJobs">
         <option v-for="option in statusOptions" :key="option.value" :value="option.value">
@@ -77,9 +78,12 @@ function getStatusClass(status: string) {
       </select>
     </div>
 
-    <div v-if="jobStore.loading" class="loading fade-in-up">加载中...</div>
+    <div v-if="jobStore.loading" class="loading">
+      <div class="loading-spinner"></div>
+      <span>加载中...</span>
+    </div>
 
-    <div v-else class="table-container fade-in-up">
+    <div v-else class="table-wrapper">
       <table class="table">
         <thead>
           <tr>
@@ -101,12 +105,17 @@ function getStatusClass(status: string) {
             <td>{{ new Date(job.createdAt).toLocaleString() }}</td>
             <td>{{ job.costTimeMs }}ms</td>
             <td>
-              <RouterLink :to="`/jobs/${job.jobId}`" class="action-link">查看详情 →</RouterLink>
+              <RouterLink :to="`/jobs/${job.jobId}`" class="action-link">
+                查看详情 <span class="arrow">→</span>
+              </RouterLink>
             </td>
           </tr>
         </tbody>
       </table>
-      <div v-if="jobStore.jobs.length === 0" class="empty">暂无任务</div>
+      <div v-if="jobStore.jobs.length === 0" class="empty">
+        <span class="empty-icon">📭</span>
+        <span class="empty-text">暂无任务</span>
+      </div>
     </div>
   </div>
 </template>
@@ -115,6 +124,7 @@ function getStatusClass(status: string) {
 .jobs {
   min-height: 100vh;
   padding: var(--space-xl);
+  background: var(--bg-secondary);
 }
 
 .header-actions {
@@ -126,7 +136,8 @@ function getStatusClass(status: string) {
 
 .header-actions h2 {
   font-size: var(--font-size-2xl);
-  font-weight: 700;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .actions {
@@ -134,30 +145,51 @@ function getStatusClass(status: string) {
   gap: var(--space-md);
 }
 
-button.active {
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+}
+
+.refresh-btn.active {
   background: var(--accent-primary);
-  color: white;
+  color: #ffffff;
   border-color: var(--accent-primary);
-  box-shadow: var(--shadow-glow);
+}
+
+.refresh-btn:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
 }
 
 .filters {
   display: flex;
   gap: var(--space-md);
   margin-bottom: var(--space-lg);
+  background: var(--bg-card);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
 }
 
 .filters input {
   width: 200px;
+  border: 1px solid var(--border-default);
+  padding: var(--space-sm) var(--space-md);
 }
 
 .filters select {
   width: 150px;
+  border: 1px solid var(--border-default);
+  padding: var(--space-sm) var(--space-md);
 }
 
-.table-container {
+.table-wrapper {
   background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
@@ -167,10 +199,59 @@ button.active {
   color: var(--accent-primary);
   font-weight: 500;
   transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
 }
 
 .action-link:hover {
-  color: var(--accent-secondary);
+  color: var(--accent-hover);
+}
+
+.arrow {
+  transition: transform var(--transition-fast);
+  display: inline-block;
+}
+
+.action-link:hover .arrow {
   transform: translateX(4px);
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  padding: var(--space-2xl);
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-default);
+  border-top-color: var(--accent-primary);
+  border-radius: var(--radius-circle);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.empty {
+  text-align: center;
+  padding: var(--space-2xl);
+  color: var(--text-muted);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: var(--space-md);
+  display: block;
+}
+
+.empty-text {
+  font-size: var(--font-size-base);
 }
 </style>

@@ -4,23 +4,23 @@ import { RouterLink } from 'vue-router'
 
 <template>
   <div class="app">
-    <header class="header fade-in-up">
+    <header class="header">
       <div class="container">
         <div class="logo">
-          <h1>Algorithm Platform</h1>
-          <span class="subtitle">算 法 管 理 平 台</span>
+          <h1>算法管理平台</h1>
+          <span class="subtitle">Algorithm Platform</span>
         </div>
         <nav class="nav">
           <RouterLink to="/algorithms" class="nav-link">
-            <span class="icon">◈</span>
+            <span class="icon">📊</span>
             算法
           </RouterLink>
           <RouterLink to="/jobs" class="nav-link">
-            <span class="icon">◉</span>
+            <span class="icon">⚡</span>
             任务
           </RouterLink>
           <RouterLink to="/data" class="nav-link">
-            <span class="icon">◫</span>
+            <span class="icon">📁</span>
             数据
           </RouterLink>
         </nav>
@@ -48,16 +48,17 @@ import { RouterLink } from 'vue-router'
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: var(--bg-secondary);
 }
 
 .header {
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-light);
   padding: var(--space-lg) 0;
   position: sticky;
   top: 0;
   z-index: 100;
-  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-sm);
 }
 
 .container {
@@ -74,27 +75,24 @@ import { RouterLink } from 'vue-router'
 
 .logo h1 {
   font-size: var(--font-size-xl);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  color: var(--text-primary);
   margin: 0;
-  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  letter-spacing: -0.02em;
 }
 
 .subtitle {
-  font-size: 10px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 400;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.1em;
 }
 
 .nav {
   display: flex;
   gap: var(--space-md);
-  margin-top: var(--space-lg);
+  margin-top: var(--space-md);
 }
 
 .nav-link {
@@ -104,45 +102,25 @@ import { RouterLink } from 'vue-router'
   color: var(--text-secondary);
   font-size: var(--font-size-sm);
   padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   transition: all var(--transition-base);
   position: relative;
-  overflow: hidden;
-}
-
-.nav-link::before {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: 0;
-  height: 2px;
-  background: var(--accent-primary);
-  transition: all var(--transition-base);
-  transform: translateX(-50%);
 }
 
 .nav-link:hover {
-  color: var(--text-primary);
-  background: var(--bg-tertiary);
-}
-
-.nav-link:hover::before {
-  width: 100%;
+  color: var(--accent-primary);
+  background: rgba(64, 158, 255, 0.05);
 }
 
 .nav-link.router-link-active {
   color: var(--accent-primary);
-  background: rgba(139, 92, 246, 0.1);
-}
-
-.nav-link.router-link-active::before {
-  width: 100%;
+  background: rgba(64, 158, 255, 0.1);
+  font-weight: 500;
 }
 
 .icon {
   font-size: var(--font-size-lg);
-  font-weight: 300;
+  font-weight: 400;
 }
 
 .main {
@@ -151,10 +129,11 @@ import { RouterLink } from 'vue-router'
 }
 
 .footer {
-  background: var(--bg-secondary);
-  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-light);
   padding: var(--space-lg) 0;
   text-align: center;
+  margin-top: auto;
 }
 
 .footer p {

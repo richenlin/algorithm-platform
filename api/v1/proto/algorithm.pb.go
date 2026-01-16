@@ -27,12 +27,13 @@ type ExecuteRequest struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	AlgorithmId    string                 `protobuf:"bytes,1,opt,name=algorithm_id,json=algorithmId,proto3" json:"algorithm_id,omitempty"`
 	Mode           string                 `protobuf:"bytes,2,opt,name=mode,proto3" json:"mode,omitempty"`
-	Params         map[string]string      `protobuf:"bytes,3,rep,name=params,proto3" json:"params,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	InputSource    *InputSource           `protobuf:"bytes,4,opt,name=input_source,json=inputSource,proto3" json:"input_source,omitempty"`
-	WebhookUrl     string                 `protobuf:"bytes,5,opt,name=webhook_url,json=webhookUrl,proto3" json:"webhook_url,omitempty"`
-	ForceRefresh   bool                   `protobuf:"varint,6,opt,name=force_refresh,json=forceRefresh,proto3" json:"force_refresh,omitempty"`
-	ResourceConfig *ResourceConfig        `protobuf:"bytes,7,opt,name=resource_config,json=resourceConfig,proto3" json:"resource_config,omitempty"`
-	TimeoutSeconds int32                  `protobuf:"varint,8,opt,name=timeout_seconds,json=timeoutSeconds,proto3" json:"timeout_seconds,omitempty"`
+	IsAsync        bool                   `protobuf:"varint,3,opt,name=is_async,json=isAsync,proto3" json:"is_async,omitempty"`
+	Params         map[string]string      `protobuf:"bytes,4,rep,name=params,proto3" json:"params,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	InputSource    *InputSource           `protobuf:"bytes,5,opt,name=input_source,json=inputSource,proto3" json:"input_source,omitempty"`
+	WebhookUrl     string                 `protobuf:"bytes,6,opt,name=webhook_url,json=webhookUrl,proto3" json:"webhook_url,omitempty"`
+	ForceRefresh   bool                   `protobuf:"varint,7,opt,name=force_refresh,json=forceRefresh,proto3" json:"force_refresh,omitempty"`
+	ResourceConfig *ResourceConfig        `protobuf:"bytes,8,opt,name=resource_config,json=resourceConfig,proto3" json:"resource_config,omitempty"`
+	TimeoutSeconds int32                  `protobuf:"varint,9,opt,name=timeout_seconds,json=timeoutSeconds,proto3" json:"timeout_seconds,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -79,6 +80,13 @@ func (x *ExecuteRequest) GetMode() string {
 		return x.Mode
 	}
 	return ""
+}
+
+func (x *ExecuteRequest) GetIsAsync() bool {
+	if x != nil {
+		return x.IsAsync
+	}
+	return false
 }
 
 func (x *ExecuteRequest) GetParams() map[string]string {
@@ -427,17 +435,18 @@ var File_proto_algorithm_proto protoreflect.FileDescriptor
 
 const file_proto_algorithm_proto_rawDesc = "" +
 	"\n" +
-	"\x15proto/algorithm.proto\x12\x06api.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa6\x03\n" +
+	"\x15proto/algorithm.proto\x12\x06api.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xc1\x03\n" +
 	"\x0eExecuteRequest\x12!\n" +
 	"\falgorithm_id\x18\x01 \x01(\tR\valgorithmId\x12\x12\n" +
-	"\x04mode\x18\x02 \x01(\tR\x04mode\x12:\n" +
-	"\x06params\x18\x03 \x03(\v2\".api.v1.ExecuteRequest.ParamsEntryR\x06params\x126\n" +
-	"\finput_source\x18\x04 \x01(\v2\x13.api.v1.InputSourceR\vinputSource\x12\x1f\n" +
-	"\vwebhook_url\x18\x05 \x01(\tR\n" +
+	"\x04mode\x18\x02 \x01(\tR\x04mode\x12\x19\n" +
+	"\bis_async\x18\x03 \x01(\bR\aisAsync\x12:\n" +
+	"\x06params\x18\x04 \x03(\v2\".api.v1.ExecuteRequest.ParamsEntryR\x06params\x126\n" +
+	"\finput_source\x18\x05 \x01(\v2\x13.api.v1.InputSourceR\vinputSource\x12\x1f\n" +
+	"\vwebhook_url\x18\x06 \x01(\tR\n" +
 	"webhookUrl\x12#\n" +
-	"\rforce_refresh\x18\x06 \x01(\bR\fforceRefresh\x12?\n" +
-	"\x0fresource_config\x18\a \x01(\v2\x16.api.v1.ResourceConfigR\x0eresourceConfig\x12'\n" +
-	"\x0ftimeout_seconds\x18\b \x01(\x05R\x0etimeoutSeconds\x1a9\n" +
+	"\rforce_refresh\x18\a \x01(\bR\fforceRefresh\x12?\n" +
+	"\x0fresource_config\x18\b \x01(\v2\x16.api.v1.ResourceConfigR\x0eresourceConfig\x12'\n" +
+	"\x0ftimeout_seconds\x18\t \x01(\x05R\x0etimeoutSeconds\x1a9\n" +
 	"\vParamsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"3\n" +

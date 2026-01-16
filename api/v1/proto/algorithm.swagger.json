@@ -92,6 +92,9 @@
         "mode": {
           "type": "string"
         },
+        "isAsync": {
+          "type": "boolean"
+        },
         "params": {
           "type": "object",
           "additionalProperties": {

@@ -25,12 +25,13 @@ service AlgorithmService {
 message ExecuteRequest {
   string algorithm_id = 1;
   string mode = 2;
-  map<string, string> params = 3;
-  InputSource input_source = 4;
-  string webhook_url = 5;
-  bool force_refresh = 6;
-  ResourceConfig resource_config = 7;
-  int32 timeout_seconds = 8;
+  bool is_async = 3;
+  map<string, string> params = 4;
+  InputSource input_source = 5;
+  string webhook_url = 6;
+  bool force_refresh = 7;
+  ResourceConfig resource_config = 8;
+  int32 timeout_seconds = 9;
 }
 
 message InputSource {

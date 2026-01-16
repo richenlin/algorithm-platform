@@ -1130,6 +1130,102 @@ func (x *ListPresetDataResponse) GetTotal() int32 {
 	return 0
 }
 
+type DeletePresetDataRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeletePresetDataRequest) Reset() {
+	*x = DeletePresetDataRequest{}
+	mi := &file_proto_management_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeletePresetDataRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeletePresetDataRequest) ProtoMessage() {}
+
+func (x *DeletePresetDataRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_management_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeletePresetDataRequest.ProtoReflect.Descriptor instead.
+func (*DeletePresetDataRequest) Descriptor() ([]byte, []int) {
+	return file_proto_management_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *DeletePresetDataRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type DeletePresetDataResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeletePresetDataResponse) Reset() {
+	*x = DeletePresetDataResponse{}
+	mi := &file_proto_management_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeletePresetDataResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeletePresetDataResponse) ProtoMessage() {}
+
+func (x *DeletePresetDataResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_management_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeletePresetDataResponse.ProtoReflect.Descriptor instead.
+func (*DeletePresetDataResponse) Descriptor() ([]byte, []int) {
+	return file_proto_management_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *DeletePresetDataResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *DeletePresetDataResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 type ListJobsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AlgorithmId   string                 `protobuf:"bytes,1,opt,name=algorithm_id,proto3" json:"algorithm_id,omitempty"`
@@ -1142,7 +1238,7 @@ type ListJobsRequest struct {
 
 func (x *ListJobsRequest) Reset() {
 	*x = ListJobsRequest{}
-	mi := &file_proto_management_proto_msgTypes[15]
+	mi := &file_proto_management_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1154,7 +1250,7 @@ func (x *ListJobsRequest) String() string {
 func (*ListJobsRequest) ProtoMessage() {}
 
 func (x *ListJobsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_management_proto_msgTypes[15]
+	mi := &file_proto_management_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1167,7 +1263,7 @@ func (x *ListJobsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListJobsRequest.ProtoReflect.Descriptor instead.
 func (*ListJobsRequest) Descriptor() ([]byte, []int) {
-	return file_proto_management_proto_rawDescGZIP(), []int{15}
+	return file_proto_management_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ListJobsRequest) GetAlgorithmId() string {
@@ -1212,7 +1308,7 @@ type JobSummary struct {
 
 func (x *JobSummary) Reset() {
 	*x = JobSummary{}
-	mi := &file_proto_management_proto_msgTypes[16]
+	mi := &file_proto_management_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1224,7 +1320,7 @@ func (x *JobSummary) String() string {
 func (*JobSummary) ProtoMessage() {}
 
 func (x *JobSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_management_proto_msgTypes[16]
+	mi := &file_proto_management_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1237,7 +1333,7 @@ func (x *JobSummary) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JobSummary.ProtoReflect.Descriptor instead.
 func (*JobSummary) Descriptor() ([]byte, []int) {
-	return file_proto_management_proto_rawDescGZIP(), []int{16}
+	return file_proto_management_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *JobSummary) GetJobId() string {
@@ -1292,7 +1388,7 @@ type ListJobsResponse struct {
 
 func (x *ListJobsResponse) Reset() {
 	*x = ListJobsResponse{}
-	mi := &file_proto_management_proto_msgTypes[17]
+	mi := &file_proto_management_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1304,7 +1400,7 @@ func (x *ListJobsResponse) String() string {
 func (*ListJobsResponse) ProtoMessage() {}
 
 func (x *ListJobsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_management_proto_msgTypes[17]
+	mi := &file_proto_management_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1317,7 +1413,7 @@ func (x *ListJobsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListJobsResponse.ProtoReflect.Descriptor instead.
 func (*ListJobsResponse) Descriptor() ([]byte, []int) {
-	return file_proto_management_proto_rawDescGZIP(), []int{17}
+	return file_proto_management_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *ListJobsResponse) GetJobs() []*JobSummary {
@@ -1343,7 +1439,7 @@ type GetJobDetailRequest struct {
 
 func (x *GetJobDetailRequest) Reset() {
 	*x = GetJobDetailRequest{}
-	mi := &file_proto_management_proto_msgTypes[18]
+	mi := &file_proto_management_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1355,7 +1451,7 @@ func (x *GetJobDetailRequest) String() string {
 func (*GetJobDetailRequest) ProtoMessage() {}
 
 func (x *GetJobDetailRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_management_proto_msgTypes[18]
+	mi := &file_proto_management_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1368,7 +1464,7 @@ func (x *GetJobDetailRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetJobDetailRequest.ProtoReflect.Descriptor instead.
 func (*GetJobDetailRequest) Descriptor() ([]byte, []int) {
-	return file_proto_management_proto_rawDescGZIP(), []int{18}
+	return file_proto_management_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GetJobDetailRequest) GetJobId() string {
@@ -1400,7 +1496,7 @@ type JobDetail struct {
 
 func (x *JobDetail) Reset() {
 	*x = JobDetail{}
-	mi := &file_proto_management_proto_msgTypes[19]
+	mi := &file_proto_management_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1412,7 +1508,7 @@ func (x *JobDetail) String() string {
 func (*JobDetail) ProtoMessage() {}
 
 func (x *JobDetail) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_management_proto_msgTypes[19]
+	mi := &file_proto_management_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1425,7 +1521,7 @@ func (x *JobDetail) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JobDetail.ProtoReflect.Descriptor instead.
 func (*JobDetail) Descriptor() ([]byte, []int) {
-	return file_proto_management_proto_rawDescGZIP(), []int{19}
+	return file_proto_management_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *JobDetail) GetJobId() string {
@@ -1534,7 +1630,7 @@ type GetServerInfoRequest struct {
 
 func (x *GetServerInfoRequest) Reset() {
 	*x = GetServerInfoRequest{}
-	mi := &file_proto_management_proto_msgTypes[20]
+	mi := &file_proto_management_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1546,7 +1642,7 @@ func (x *GetServerInfoRequest) String() string {
 func (*GetServerInfoRequest) ProtoMessage() {}
 
 func (x *GetServerInfoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_management_proto_msgTypes[20]
+	mi := &file_proto_management_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1559,7 +1655,7 @@ func (x *GetServerInfoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServerInfoRequest.ProtoReflect.Descriptor instead.
 func (*GetServerInfoRequest) Descriptor() ([]byte, []int) {
-	return file_proto_management_proto_rawDescGZIP(), []int{20}
+	return file_proto_management_proto_rawDescGZIP(), []int{22}
 }
 
 type GetServerInfoResponse struct {
@@ -1574,7 +1670,7 @@ type GetServerInfoResponse struct {
 
 func (x *GetServerInfoResponse) Reset() {
 	*x = GetServerInfoResponse{}
-	mi := &file_proto_management_proto_msgTypes[21]
+	mi := &file_proto_management_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1586,7 +1682,7 @@ func (x *GetServerInfoResponse) String() string {
 func (*GetServerInfoResponse) ProtoMessage() {}
 
 func (x *GetServerInfoResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_management_proto_msgTypes[21]
+	mi := &file_proto_management_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1599,7 +1695,7 @@ func (x *GetServerInfoResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServerInfoResponse.ProtoReflect.Descriptor instead.
 func (*GetServerInfoResponse) Descriptor() ([]byte, []int) {
-	return file_proto_management_proto_rawDescGZIP(), []int{21}
+	return file_proto_management_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *GetServerInfoResponse) GetOs() string {
@@ -1735,7 +1831,12 @@ const file_proto_management_proto_rawDesc = "" +
 	"created_at\"X\n" +
 	"\x16ListPresetDataResponse\x12(\n" +
 	"\x05files\x18\x01 \x03(\v2\x12.api.v1.PresetDataR\x05files\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x05R\x05total\"\x7f\n" +
+	"\x05total\x18\x02 \x01(\x05R\x05total\")\n" +
+	"\x17DeletePresetDataRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"N\n" +
+	"\x18DeletePresetDataResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"\x7f\n" +
 	"\x0fListJobsRequest\x12\"\n" +
 	"\falgorithm_id\x18\x01 \x01(\tR\falgorithm_id\x12\x16\n" +
 	"\x06status\x18\x02 \x01(\tR\x06status\x12\x12\n" +
@@ -1789,7 +1890,8 @@ const file_proto_management_proto_rawDesc = "" +
 	"\x15PLATFORM_LINUX_X86_64\x10\x01\x12\x18\n" +
 	"\x14PLATFORM_LINUX_ARM64\x10\x02\x12\x1b\n" +
 	"\x17PLATFORM_WINDOWS_X86_64\x10\x03\x12\x18\n" +
-	"\x14PLATFORM_MACOS_ARM64\x10\x042\xbe\t\n" +
+	"\x14PLATFORM_MACOS_ARM64\x10\x042\xb0\n" +
+	"\n" +
 	"\x11ManagementService\x12c\n" +
 	"\x0fCreateAlgorithm\x12\x1e.api.v1.CreateAlgorithmRequest\x1a\x11.api.v1.Algorithm\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/api/v1/algorithms\x12h\n" +
 	"\x0fUpdateAlgorithm\x12\x1e.api.v1.UpdateAlgorithmRequest\x1a\x11.api.v1.Algorithm\"\"\x82\xd3\xe4\x93\x02\x1c:\x01*\x1a\x17/api/v1/algorithms/{id}\x12k\n" +
@@ -1798,7 +1900,8 @@ const file_proto_management_proto_rawDesc = "" +
 	"\rCreateVersion\x12\x1c.api.v1.CreateVersionRequest\x1a\x0f.api.v1.Version\"5\x82\xd3\xe4\x93\x02/:\x01*\"*/api/v1/algorithms/{algorithm_id}/versions\x12\x91\x01\n" +
 	"\x0fRollbackVersion\x12\x1e.api.v1.RollbackVersionRequest\x1a\x11.api.v1.Algorithm\"K\x82\xd3\xe4\x93\x02E:\x01*\"@/api/v1/algorithms/{algorithm_id}/versions/{version_id}/rollback\x12i\n" +
 	"\x10UploadPresetData\x12\x19.api.v1.UploadDataRequest\x1a\x1a.api.v1.UploadDataResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/api/v1/data/upload\x12e\n" +
-	"\x0eListPresetData\x12\x1d.api.v1.ListPresetDataRequest\x1a\x1e.api.v1.ListPresetDataResponse\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/api/v1/data\x12S\n" +
+	"\x0eListPresetData\x12\x1d.api.v1.ListPresetDataRequest\x1a\x1e.api.v1.ListPresetDataResponse\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/api/v1/data\x12p\n" +
+	"\x10DeletePresetData\x12\x1f.api.v1.DeletePresetDataRequest\x1a .api.v1.DeletePresetDataResponse\"\x19\x82\xd3\xe4\x93\x02\x13*\x11/api/v1/data/{id}\x12S\n" +
 	"\bListJobs\x12\x17.api.v1.ListJobsRequest\x1a\x18.api.v1.ListJobsResponse\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/api/v1/jobs\x12d\n" +
 	"\fGetJobDetail\x12\x1b.api.v1.GetJobDetailRequest\x1a\x11.api.v1.JobDetail\"$\x82\xd3\xe4\x93\x02\x1e\x12\x1c/api/v1/jobs/{job_id}/detail\x12i\n" +
 	"\rGetServerInfo\x12\x1c.api.v1.GetServerInfoRequest\x1a\x1d.api.v1.GetServerInfoResponse\"\x1b\x82\xd3\xe4\x93\x02\x15\x12\x13/api/v1/server/infoB$Z\"algorithm-platform/api/v1/proto;v1b\x06proto3"
@@ -1816,49 +1919,51 @@ func file_proto_management_proto_rawDescGZIP() []byte {
 }
 
 var file_proto_management_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_proto_management_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
+var file_proto_management_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
 var file_proto_management_proto_goTypes = []any{
-	(Platform)(0),                  // 0: api.v1.Platform
-	(*CreateAlgorithmRequest)(nil), // 1: api.v1.CreateAlgorithmRequest
-	(*UpdateAlgorithmRequest)(nil), // 2: api.v1.UpdateAlgorithmRequest
-	(*Algorithm)(nil),              // 3: api.v1.Algorithm
-	(*ListAlgorithmsRequest)(nil),  // 4: api.v1.ListAlgorithmsRequest
-	(*ListAlgorithmsResponse)(nil), // 5: api.v1.ListAlgorithmsResponse
-	(*GetAlgorithmRequest)(nil),    // 6: api.v1.GetAlgorithmRequest
-	(*GetAlgorithmResponse)(nil),   // 7: api.v1.GetAlgorithmResponse
-	(*CreateVersionRequest)(nil),   // 8: api.v1.CreateVersionRequest
-	(*Version)(nil),                // 9: api.v1.Version
-	(*RollbackVersionRequest)(nil), // 10: api.v1.RollbackVersionRequest
-	(*UploadDataRequest)(nil),      // 11: api.v1.UploadDataRequest
-	(*UploadDataResponse)(nil),     // 12: api.v1.UploadDataResponse
-	(*ListPresetDataRequest)(nil),  // 13: api.v1.ListPresetDataRequest
-	(*PresetData)(nil),             // 14: api.v1.PresetData
-	(*ListPresetDataResponse)(nil), // 15: api.v1.ListPresetDataResponse
-	(*ListJobsRequest)(nil),        // 16: api.v1.ListJobsRequest
-	(*JobSummary)(nil),             // 17: api.v1.JobSummary
-	(*ListJobsResponse)(nil),       // 18: api.v1.ListJobsResponse
-	(*GetJobDetailRequest)(nil),    // 19: api.v1.GetJobDetailRequest
-	(*JobDetail)(nil),              // 20: api.v1.JobDetail
-	(*GetServerInfoRequest)(nil),   // 21: api.v1.GetServerInfoRequest
-	(*GetServerInfoResponse)(nil),  // 22: api.v1.GetServerInfoResponse
-	(*timestamppb.Timestamp)(nil),  // 23: google.protobuf.Timestamp
+	(Platform)(0),                    // 0: api.v1.Platform
+	(*CreateAlgorithmRequest)(nil),   // 1: api.v1.CreateAlgorithmRequest
+	(*UpdateAlgorithmRequest)(nil),   // 2: api.v1.UpdateAlgorithmRequest
+	(*Algorithm)(nil),                // 3: api.v1.Algorithm
+	(*ListAlgorithmsRequest)(nil),    // 4: api.v1.ListAlgorithmsRequest
+	(*ListAlgorithmsResponse)(nil),   // 5: api.v1.ListAlgorithmsResponse
+	(*GetAlgorithmRequest)(nil),      // 6: api.v1.GetAlgorithmRequest
+	(*GetAlgorithmResponse)(nil),     // 7: api.v1.GetAlgorithmResponse
+	(*CreateVersionRequest)(nil),     // 8: api.v1.CreateVersionRequest
+	(*Version)(nil),                  // 9: api.v1.Version
+	(*RollbackVersionRequest)(nil),   // 10: api.v1.RollbackVersionRequest
+	(*UploadDataRequest)(nil),        // 11: api.v1.UploadDataRequest
+	(*UploadDataResponse)(nil),       // 12: api.v1.UploadDataResponse
+	(*ListPresetDataRequest)(nil),    // 13: api.v1.ListPresetDataRequest
+	(*PresetData)(nil),               // 14: api.v1.PresetData
+	(*ListPresetDataResponse)(nil),   // 15: api.v1.ListPresetDataResponse
+	(*DeletePresetDataRequest)(nil),  // 16: api.v1.DeletePresetDataRequest
+	(*DeletePresetDataResponse)(nil), // 17: api.v1.DeletePresetDataResponse
+	(*ListJobsRequest)(nil),          // 18: api.v1.ListJobsRequest
+	(*JobSummary)(nil),               // 19: api.v1.JobSummary
+	(*ListJobsResponse)(nil),         // 20: api.v1.ListJobsResponse
+	(*GetJobDetailRequest)(nil),      // 21: api.v1.GetJobDetailRequest
+	(*JobDetail)(nil),                // 22: api.v1.JobDetail
+	(*GetServerInfoRequest)(nil),     // 23: api.v1.GetServerInfoRequest
+	(*GetServerInfoResponse)(nil),    // 24: api.v1.GetServerInfoResponse
+	(*timestamppb.Timestamp)(nil),    // 25: google.protobuf.Timestamp
 }
 var file_proto_management_proto_depIdxs = []int32{
 	0,  // 0: api.v1.CreateAlgorithmRequest.platform:type_name -> api.v1.Platform
 	0,  // 1: api.v1.Algorithm.platform:type_name -> api.v1.Platform
-	23, // 2: api.v1.Algorithm.created_at:type_name -> google.protobuf.Timestamp
-	23, // 3: api.v1.Algorithm.updated_at:type_name -> google.protobuf.Timestamp
+	25, // 2: api.v1.Algorithm.created_at:type_name -> google.protobuf.Timestamp
+	25, // 3: api.v1.Algorithm.updated_at:type_name -> google.protobuf.Timestamp
 	3,  // 4: api.v1.ListAlgorithmsResponse.algorithms:type_name -> api.v1.Algorithm
 	3,  // 5: api.v1.GetAlgorithmResponse.algorithm:type_name -> api.v1.Algorithm
 	9,  // 6: api.v1.GetAlgorithmResponse.versions:type_name -> api.v1.Version
-	23, // 7: api.v1.Version.created_at:type_name -> google.protobuf.Timestamp
-	23, // 8: api.v1.PresetData.created_at:type_name -> google.protobuf.Timestamp
+	25, // 7: api.v1.Version.created_at:type_name -> google.protobuf.Timestamp
+	25, // 8: api.v1.PresetData.created_at:type_name -> google.protobuf.Timestamp
 	14, // 9: api.v1.ListPresetDataResponse.files:type_name -> api.v1.PresetData
-	23, // 10: api.v1.JobSummary.created_at:type_name -> google.protobuf.Timestamp
-	17, // 11: api.v1.ListJobsResponse.jobs:type_name -> api.v1.JobSummary
-	23, // 12: api.v1.JobDetail.created_at:type_name -> google.protobuf.Timestamp
-	23, // 13: api.v1.JobDetail.started_at:type_name -> google.protobuf.Timestamp
-	23, // 14: api.v1.JobDetail.finished_at:type_name -> google.protobuf.Timestamp
+	25, // 10: api.v1.JobSummary.created_at:type_name -> google.protobuf.Timestamp
+	19, // 11: api.v1.ListJobsResponse.jobs:type_name -> api.v1.JobSummary
+	25, // 12: api.v1.JobDetail.created_at:type_name -> google.protobuf.Timestamp
+	25, // 13: api.v1.JobDetail.started_at:type_name -> google.protobuf.Timestamp
+	25, // 14: api.v1.JobDetail.finished_at:type_name -> google.protobuf.Timestamp
 	0,  // 15: api.v1.GetServerInfoResponse.platform:type_name -> api.v1.Platform
 	1,  // 16: api.v1.ManagementService.CreateAlgorithm:input_type -> api.v1.CreateAlgorithmRequest
 	2,  // 17: api.v1.ManagementService.UpdateAlgorithm:input_type -> api.v1.UpdateAlgorithmRequest
@@ -1868,22 +1973,24 @@ var file_proto_management_proto_depIdxs = []int32{
 	10, // 21: api.v1.ManagementService.RollbackVersion:input_type -> api.v1.RollbackVersionRequest
 	11, // 22: api.v1.ManagementService.UploadPresetData:input_type -> api.v1.UploadDataRequest
 	13, // 23: api.v1.ManagementService.ListPresetData:input_type -> api.v1.ListPresetDataRequest
-	16, // 24: api.v1.ManagementService.ListJobs:input_type -> api.v1.ListJobsRequest
-	19, // 25: api.v1.ManagementService.GetJobDetail:input_type -> api.v1.GetJobDetailRequest
-	21, // 26: api.v1.ManagementService.GetServerInfo:input_type -> api.v1.GetServerInfoRequest
-	3,  // 27: api.v1.ManagementService.CreateAlgorithm:output_type -> api.v1.Algorithm
-	3,  // 28: api.v1.ManagementService.UpdateAlgorithm:output_type -> api.v1.Algorithm
-	5,  // 29: api.v1.ManagementService.ListAlgorithms:output_type -> api.v1.ListAlgorithmsResponse
-	7,  // 30: api.v1.ManagementService.GetAlgorithm:output_type -> api.v1.GetAlgorithmResponse
-	9,  // 31: api.v1.ManagementService.CreateVersion:output_type -> api.v1.Version
-	3,  // 32: api.v1.ManagementService.RollbackVersion:output_type -> api.v1.Algorithm
-	12, // 33: api.v1.ManagementService.UploadPresetData:output_type -> api.v1.UploadDataResponse
-	15, // 34: api.v1.ManagementService.ListPresetData:output_type -> api.v1.ListPresetDataResponse
-	18, // 35: api.v1.ManagementService.ListJobs:output_type -> api.v1.ListJobsResponse
-	20, // 36: api.v1.ManagementService.GetJobDetail:output_type -> api.v1.JobDetail
-	22, // 37: api.v1.ManagementService.GetServerInfo:output_type -> api.v1.GetServerInfoResponse
-	27, // [27:38] is the sub-list for method output_type
-	16, // [16:27] is the sub-list for method input_type
+	16, // 24: api.v1.ManagementService.DeletePresetData:input_type -> api.v1.DeletePresetDataRequest
+	18, // 25: api.v1.ManagementService.ListJobs:input_type -> api.v1.ListJobsRequest
+	21, // 26: api.v1.ManagementService.GetJobDetail:input_type -> api.v1.GetJobDetailRequest
+	23, // 27: api.v1.ManagementService.GetServerInfo:input_type -> api.v1.GetServerInfoRequest
+	3,  // 28: api.v1.ManagementService.CreateAlgorithm:output_type -> api.v1.Algorithm
+	3,  // 29: api.v1.ManagementService.UpdateAlgorithm:output_type -> api.v1.Algorithm
+	5,  // 30: api.v1.ManagementService.ListAlgorithms:output_type -> api.v1.ListAlgorithmsResponse
+	7,  // 31: api.v1.ManagementService.GetAlgorithm:output_type -> api.v1.GetAlgorithmResponse
+	9,  // 32: api.v1.ManagementService.CreateVersion:output_type -> api.v1.Version
+	3,  // 33: api.v1.ManagementService.RollbackVersion:output_type -> api.v1.Algorithm
+	12, // 34: api.v1.ManagementService.UploadPresetData:output_type -> api.v1.UploadDataResponse
+	15, // 35: api.v1.ManagementService.ListPresetData:output_type -> api.v1.ListPresetDataResponse
+	17, // 36: api.v1.ManagementService.DeletePresetData:output_type -> api.v1.DeletePresetDataResponse
+	20, // 37: api.v1.ManagementService.ListJobs:output_type -> api.v1.ListJobsResponse
+	22, // 38: api.v1.ManagementService.GetJobDetail:output_type -> api.v1.JobDetail
+	24, // 39: api.v1.ManagementService.GetServerInfo:output_type -> api.v1.GetServerInfoResponse
+	28, // [28:40] is the sub-list for method output_type
+	16, // [16:28] is the sub-list for method input_type
 	16, // [16:16] is the sub-list for extension type_name
 	16, // [16:16] is the sub-list for extension extendee
 	0,  // [0:16] is the sub-list for field type_name
@@ -1900,7 +2007,7 @@ func file_proto_management_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_management_proto_rawDesc), len(file_proto_management_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   22,
+			NumMessages:   24,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

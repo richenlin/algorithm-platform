@@ -86,7 +86,10 @@ export const dataApi = {
     api.get<{ files: PresetData[]; total: number }>('/api/v1/data', { params }),
 
   upload: (data: { filename: string; category: string; minio_path: string }) =>
-    api.post<{ file_id: string; minio_url: string }>('/api/v1/data/upload', data)
+    api.post<{ file_id: string; minio_url: string }>('/api/v1/data/upload', data),
+
+  delete: (id: string) =>
+    api.delete<{ success: boolean; message: string }>(`/api/v1/data/${id}`)
 }
 
 export const jobApi = {

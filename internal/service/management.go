@@ -325,6 +325,31 @@ func (s *ManagementService) ListPresetData(ctx context.Context, req *v1.ListPres
 	}, nil
 }
 
+func (s *ManagementService) DeletePresetData(ctx context.Context, req *v1.DeletePresetDataRequest) (*v1.DeletePresetDataResponse, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	data, exists := s.presetData[req.Id]
+	if !exists {
+		return nil, fmt.Errorf("data not found")
+	}
+
+	minioPath := data.MinioUrl
+	if s.minioClient != nil {
+		err := s.minioClient.RemoveObject(ctx, s.bucketName, minioPath, minio.RemoveObjectOptions{})
+		if err != nil {
+			fmt.Printf("Failed to remove object from MinIO: %v\n", err)
+		}
+	}
+
+	delete(s.presetData, req.Id)
+
+	return &v1.DeletePresetDataResponse{
+		Success: true,
+		Message: "Data deleted successfully",
+	}, nil
+}
+
 func (s *ManagementService) GetPresetDataDownloadURL(ctx context.Context, fileID string) (string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

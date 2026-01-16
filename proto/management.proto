@@ -61,6 +61,12 @@ service ManagementService {
     };
   }
 
+  rpc DeletePresetData(DeletePresetDataRequest) returns (DeletePresetDataResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/data/{id}"
+    };
+  }
+
   rpc ListJobs(ListJobsRequest) returns (ListJobsResponse) {
     option (google.api.http) = {
       get: "/api/v1/jobs"
@@ -195,6 +201,15 @@ message PresetData {
 message ListPresetDataResponse {
   repeated PresetData files = 1 [json_name = "files"];
   int32 total = 2 [json_name = "total"];
+}
+
+message DeletePresetDataRequest {
+  string id = 1 [json_name = "id"];
+}
+
+message DeletePresetDataResponse {
+  bool success = 1 [json_name = "success"];
+  string message = 2 [json_name = "message"];
 }
 
 message ListJobsRequest {

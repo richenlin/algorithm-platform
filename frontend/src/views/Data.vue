@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useDataStore } from '../stores/data'
 import { API_BASE_URL } from '../api/index'
 
@@ -26,11 +26,6 @@ const categoryOptions = [
 ]
 
 const presetCategories = ['通用', '输入数据', '输出数据', '参考数据']
-
-const availableCategories = computed(() => {
-  const allCategories = dataStore.files.map(f => f.category)
-  return [...new Set(allCategories)]
-})
 
 const newCategory = ref('')
 
@@ -75,7 +70,7 @@ async function handleUpload() {
       throw new Error(`HTTP error! status: ${response.status}, ${errorText}`)
     }
 
-    const result = await response.json()
+    await response.json()
 
     showUploadModal.value = false
     resetForm()
@@ -88,7 +83,7 @@ async function handleUpload() {
   }
 }
 
-async function handleDownload(fileId: string, filename: string) {
+async function handleDownload(fileId: string, _filename: string) {
   try {
     const response = await fetch(`${API_BASE_URL}/api/v1/data-download?file_id=${fileId}`)
     if (!response.ok) {
@@ -103,6 +98,56 @@ async function handleDownload(fileId: string, filename: string) {
   } catch (error) {
     console.error('Failed to download file:', error)
     alert('下载失败，请重试')
+  }
+}
+
+async function handleDelete(fileId: string, filename: string) {
+  if (!confirm(`确定要删除"${filename}"吗？`)) {
+    return
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/data/${fileId}`, {
+      method: 'DELETE'
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`HTTP error! status: ${response.status}, ${errorText}`)
+    }
+
+    fetchFiles()
+  } catch (error) {
+    console.error('Failed to delete file:', error)
+    alert('删除失败，请重试')
+  }
+}
+
+async function handleDelete(fileId: string, filename: string) {
+  if (!confirm(`确定要删除"${filename}"吗？`)) {
+    return
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/data/${fileId}`, {
+      method: 'DELETE'
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`HTTP error! status: ${response.status}, ${errorText}`)
+    }
+
+    const result = await response.json()
+    if (result.success) {
+      alert('删除成功')
+      fetchFiles()
+    } else {
+      alert('删除失败，请重试')
+    }
+  } catch (error) {
+    console.error('Failed to delete file:', error)
+    alert('删除失败，请重试')
   }
 }
 
@@ -155,7 +200,7 @@ function resetForm() {
         <thead>
           <tr>
             <th>文件 ID</th>
-            <th>文件名</th>
+            <th>数据名</th>
             <th>类别</th>
             <th>MinIO URL</th>
             <th>创建时间</th>
@@ -174,6 +219,10 @@ function resetForm() {
             <td>
               <a @click="handleDownload(file.id, file.filename)" class="action-link" style="cursor: pointer">
                 下载 <span class="arrow">→</span>
+              </a>
+              <span class="action-separator">|</span>
+              <a @click="handleDelete(file.id, file.filename)" class="action-link delete" style="cursor: pointer">
+                删除
               </a>
             </td>
           </tr>
@@ -214,7 +263,7 @@ function resetForm() {
                 <input
                   v-model="newCategory"
                   @keyup.enter="addCategory"
-                  placeholder="输入新类别（回车添加）..."
+                  placeholder="输入新类别 ..."
                 />
               </div>
             </div>
@@ -333,6 +382,19 @@ button.btn-primary:disabled {
 
 .action-link:hover {
   color: var(--accent-hover);
+}
+
+.action-link.delete {
+  color: var(--danger);
+}
+
+.action-link.delete:hover {
+  color: #c53030;
+}
+
+.action-separator {
+  margin: 0 var(--space-sm);
+  color: var(--border-default);
 }
 
 .arrow {

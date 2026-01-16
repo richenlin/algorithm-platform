@@ -27,6 +27,7 @@ const (
 	ManagementService_RollbackVersion_FullMethodName  = "/api.v1.ManagementService/RollbackVersion"
 	ManagementService_UploadPresetData_FullMethodName = "/api.v1.ManagementService/UploadPresetData"
 	ManagementService_ListPresetData_FullMethodName   = "/api.v1.ManagementService/ListPresetData"
+	ManagementService_DeletePresetData_FullMethodName = "/api.v1.ManagementService/DeletePresetData"
 	ManagementService_ListJobs_FullMethodName         = "/api.v1.ManagementService/ListJobs"
 	ManagementService_GetJobDetail_FullMethodName     = "/api.v1.ManagementService/GetJobDetail"
 	ManagementService_GetServerInfo_FullMethodName    = "/api.v1.ManagementService/GetServerInfo"
@@ -44,6 +45,7 @@ type ManagementServiceClient interface {
 	RollbackVersion(ctx context.Context, in *RollbackVersionRequest, opts ...grpc.CallOption) (*Algorithm, error)
 	UploadPresetData(ctx context.Context, in *UploadDataRequest, opts ...grpc.CallOption) (*UploadDataResponse, error)
 	ListPresetData(ctx context.Context, in *ListPresetDataRequest, opts ...grpc.CallOption) (*ListPresetDataResponse, error)
+	DeletePresetData(ctx context.Context, in *DeletePresetDataRequest, opts ...grpc.CallOption) (*DeletePresetDataResponse, error)
 	ListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error)
 	GetJobDetail(ctx context.Context, in *GetJobDetailRequest, opts ...grpc.CallOption) (*JobDetail, error)
 	GetServerInfo(ctx context.Context, in *GetServerInfoRequest, opts ...grpc.CallOption) (*GetServerInfoResponse, error)
@@ -137,6 +139,16 @@ func (c *managementServiceClient) ListPresetData(ctx context.Context, in *ListPr
 	return out, nil
 }
 
+func (c *managementServiceClient) DeletePresetData(ctx context.Context, in *DeletePresetDataRequest, opts ...grpc.CallOption) (*DeletePresetDataResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeletePresetDataResponse)
+	err := c.cc.Invoke(ctx, ManagementService_DeletePresetData_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *managementServiceClient) ListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListJobsResponse)
@@ -179,6 +191,7 @@ type ManagementServiceServer interface {
 	RollbackVersion(context.Context, *RollbackVersionRequest) (*Algorithm, error)
 	UploadPresetData(context.Context, *UploadDataRequest) (*UploadDataResponse, error)
 	ListPresetData(context.Context, *ListPresetDataRequest) (*ListPresetDataResponse, error)
+	DeletePresetData(context.Context, *DeletePresetDataRequest) (*DeletePresetDataResponse, error)
 	ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error)
 	GetJobDetail(context.Context, *GetJobDetailRequest) (*JobDetail, error)
 	GetServerInfo(context.Context, *GetServerInfoRequest) (*GetServerInfoResponse, error)
@@ -215,6 +228,9 @@ func (UnimplementedManagementServiceServer) UploadPresetData(context.Context, *U
 }
 func (UnimplementedManagementServiceServer) ListPresetData(context.Context, *ListPresetDataRequest) (*ListPresetDataResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListPresetData not implemented")
+}
+func (UnimplementedManagementServiceServer) DeletePresetData(context.Context, *DeletePresetDataRequest) (*DeletePresetDataResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeletePresetData not implemented")
 }
 func (UnimplementedManagementServiceServer) ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListJobs not implemented")
@@ -390,6 +406,24 @@ func _ManagementService_ListPresetData_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ManagementService_DeletePresetData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeletePresetDataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ManagementServiceServer).DeletePresetData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ManagementService_DeletePresetData_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ManagementServiceServer).DeletePresetData(ctx, req.(*DeletePresetDataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ManagementService_ListJobs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListJobsRequest)
 	if err := dec(in); err != nil {
@@ -482,6 +516,10 @@ var ManagementService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListPresetData",
 			Handler:    _ManagementService_ListPresetData_Handler,
+		},
+		{
+			MethodName: "DeletePresetData",
+			Handler:    _ManagementService_DeletePresetData_Handler,
 		},
 		{
 			MethodName: "ListJobs",

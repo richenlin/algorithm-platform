@@ -320,6 +320,36 @@
         ]
       }
     },
+    "/api/v1/data/{id}": {
+      "delete": {
+        "operationId": "ManagementService_DeletePresetData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeletePresetDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ManagementService"
+        ]
+      }
+    },
     "/api/v1/jobs": {
       "get": {
         "operationId": "ManagementService_ListJobs",
@@ -568,6 +598,17 @@
           "format": "byte"
         },
         "file_name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1DeletePresetDataResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
           "type": "string"
         }
       }

@@ -15,6 +15,12 @@ import (
 func main() {
 	cfg := config.Default()
 
+	localMode := os.Getenv("LOCAL_MODE") == "true"
+	if localMode {
+		cfg.MinIO.Endpoint = "localhost:9000"
+		cfg.MinIO.ExternalEndpoint = "localhost:9000"
+	}
+
 	managementSvc := service.NewManagementService(cfg)
 	srv := server.New(cfg.Server, managementSvc)
 

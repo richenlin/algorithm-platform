@@ -54,7 +54,43 @@ func New(cfg config.ServerConfig, managementSvc *service.ManagementService) *Ser
 	)
 
 	httpMux := http.NewServeMux()
-	httpMux.HandleFunc("/api/v1/data-download", handleDownloadData(managementSvc))
+	httpMux.HandleFunc("/api/v1/data-download", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Printf("=== data-download called: %s %s\n", r.Method, r.URL.Path)
+		fmt.Printf("Query: %v\n", r.URL.Query())
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+		w.Header().Set("Access-Control-Allow-Expose-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Max-Age", "86400")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		fileID := r.URL.Query().Get("file_id")
+		fmt.Printf("File ID: %s\n", fileID)
+		if fileID == "" {
+			http.Error(w, "File ID is required", http.StatusBadRequest)
+			return
+		}
+
+		presignedURL, err := managementSvc.GetPresetDataDownloadURL(r.Context(), fileID)
+		if err != nil {
+			fmt.Printf("Error generating presigned URL: %v\n", err)
+			http.Error(w, fmt.Sprintf("Failed to generate download URL: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, `{"download_url": "%s"}`, presignedURL)
+	})
 	httpMux.HandleFunc("/api/v1/data/upload-multipart", handleUploadMultipart(managementSvc))
 	httpMux.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("test ok"))

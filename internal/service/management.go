@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -318,6 +319,13 @@ func (s *ManagementService) ListPresetData(ctx context.Context, req *v1.ListPres
 
 		files = append(files, dataCopy)
 	}
+
+	sort.Slice(files, func(i, j int) bool {
+		if files[i].CreatedAt == nil || files[j].CreatedAt == nil {
+			return false
+		}
+		return files[i].CreatedAt.AsTime().After(files[j].CreatedAt.AsTime())
+	})
 
 	return &v1.ListPresetDataResponse{
 		Files: files,

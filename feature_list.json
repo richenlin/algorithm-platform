@@ -5,43 +5,43 @@
       "id": "F001",
       "name": "核心调度引擎与 gRPC 框架搭建",
       "priority": 1,
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "F002",
       "name": "Docker 调度器（资源限制、超时控制）",
       "priority": 2,
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "F003",
       "name": "MinIO 集成（Smart Runner）",
       "priority": 4,
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "F004",
       "name": "Redis 缓存层",
       "priority": 3,
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "F005",
       "name": "算法管理模块（版本控制）",
       "priority": 5,
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "F006",
       "name": "数据管理模块（预置数据）",
       "priority": 6,
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "F007",
       "name": "任务监控模块",
       "priority": 7,
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "F008",
@@ -53,7 +53,7 @@
       "id": "F009",
       "name": "Matlab/C++ 镜像优化",
       "priority": 9,
-      "status": "pending"
+      "status": "completed"
     }
   ]
 }

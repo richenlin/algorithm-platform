@@ -123,41 +123,14 @@ async function handleDelete(fileId: string, filename: string) {
   }
 }
 
-async function handleDelete(fileId: string, filename: string) {
-  if (!confirm(`确定要删除"${filename}"吗？`)) {
-    return
-  }
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/data/${fileId}`, {
-      method: 'DELETE'
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`HTTP error! status: ${response.status}, ${errorText}`)
-    }
-
-    const result = await response.json()
-    if (result.success) {
-      alert('删除成功')
-      fetchFiles()
-    } else {
-      alert('删除失败，请重试')
-    }
-  } catch (error) {
-    console.error('Failed to delete file:', error)
-    alert('删除失败，请重试')
-  }
-}
-
 
 function handleFileChange(event: Event) {
   const target = event.target as HTMLInputElement
   if (target.files && target.files.length > 0) {
-    selectedFile.value = target.files[0]
+    const file = target.files[0]!
+    selectedFile.value = file
     if (!uploadFormData.value.filename) {
-      uploadFormData.value.filename = target.files[0].name
+      uploadFormData.value.filename = file.name
     }
   }
 }

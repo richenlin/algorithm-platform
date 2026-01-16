@@ -10,7 +10,7 @@
     {"id": "F007", "name": "任务监控模块", "priority": 7, "status": "completed"},
     {"id": "F008", "name": "Dashboard 前端（Vue3）", "priority": 9, "status": "completed"},
     {"id": "F009", "name": "Matlab/C++ 镜像优化", "priority": 9, "status": "completed"},
-    {"id": "F010", "name": "导航菜单调整", "priority": 10, "status": "pending"},
+    {"id": "F010", "name": "导航菜单调整", "priority": 10, "status": "completed"},
     {"id": "F011", "name": "预置数据录入功能", "priority": 10, "status": "pending"},
     {"id": "F012", "name": "算法平台类型检测和选择", "priority": 10, "status": "pending"},
     {"id": "F013", "name": "算法类别标签化（支持新增）", "priority": 10, "status": "pending"},

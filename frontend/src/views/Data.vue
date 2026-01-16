@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useDataStore } from '../stores/data'
+import { API_BASE_URL } from '../api/index'
 
 const dataStore = useDataStore()
 const filters = ref({
@@ -56,26 +57,26 @@ async function handleUpload() {
     alert('请选择文件')
     return
   }
-  
+
   uploading.value = true
   try {
     const formData = new FormData()
     formData.append('file', selectedFile.value)
     formData.append('filename', uploadFormData.value.filename || selectedFile.value.name)
     formData.append('category', uploadFormData.value.category)
-    
-    const response = await fetch('http://localhost:8080/api/v1/data/upload-multipart', {
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/data/upload-multipart`, {
       method: 'POST',
       body: formData
     })
-    
+
     if (!response.ok) {
       const errorText = await response.text()
       throw new Error(`HTTP error! status: ${response.status}, ${errorText}`)
     }
-    
+
     const result = await response.json()
-    
+
     showUploadModal.value = false
     resetForm()
     fetchFiles()
@@ -86,6 +87,25 @@ async function handleUpload() {
     uploading.value = false
   }
 }
+
+async function handleDownload(fileId: string, filename: string) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/data-download?file_id=${fileId}`)
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`HTTP error! status: ${response.status}, ${errorText}`)
+    }
+
+    const result = await response.json()
+    if (result.download_url) {
+      window.open(result.download_url, '_blank')
+    }
+  } catch (error) {
+    console.error('Failed to download file:', error)
+    alert('下载失败，请重试')
+  }
+}
+
 
 function handleFileChange(event: Event) {
   const target = event.target as HTMLInputElement
@@ -152,7 +172,7 @@ function resetForm() {
             </td>
             <td>{{ file.created_at ? new Date(file.created_at).toLocaleString() : '-' }}</td>
             <td>
-              <a :href="file.minio_url" target="_blank" download class="action-link">
+              <a @click="handleDownload(file.id, file.filename)" class="action-link" style="cursor: pointer">
                 下载 <span class="arrow">→</span>
               </a>
             </td>

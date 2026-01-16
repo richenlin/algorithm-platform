@@ -15,10 +15,10 @@ import (
 func main() {
 	cfg := config.Default()
 
-	srv := server.New(cfg.Server)
+	managementSvc := service.NewManagementService(cfg)
+	srv := server.New(cfg.Server, managementSvc)
 
 	algorithmSvc := service.NewAlgorithmService()
-	managementSvc := service.NewManagementService()
 
 	srv.RegisterServices(algorithmSvc, managementSvc)
 

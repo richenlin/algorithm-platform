@@ -9,6 +9,7 @@ import (
 
 	v1 "algorithm-platform/api/v1/proto"
 	"algorithm-platform/internal/config"
+	"algorithm-platform/internal/service"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
@@ -18,15 +19,15 @@ import (
 )
 
 type Server struct {
-	grpcServer *grpc.Server
-	httpServer *http.Server
-	httpMux    *http.ServeMux
-	mux        *runtime.ServeMux
-
-	cfg config.ServerConfig
+	grpcServer    *grpc.Server
+	httpServer    *http.Server
+	httpMux       *http.ServeMux
+	mux           *runtime.ServeMux
+	managementSvc *service.ManagementService
+	cfg           config.ServerConfig
 }
 
-func New(cfg config.ServerConfig) *Server {
+func New(cfg config.ServerConfig, managementSvc *service.ManagementService) *Server {
 	grpcServer := grpc.NewServer()
 
 	mux := runtime.NewServeMux(
@@ -46,17 +47,27 @@ func New(cfg config.ServerConfig) *Server {
 
 			runtime.DefaultHTTPErrorHandler(ctx, mux, marshaler, w, r, err)
 		}),
+		runtime.WithForwardResponseOption(func(ctx context.Context, w http.ResponseWriter, m proto.Message) error {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			return nil
+		}),
 	)
 
 	httpMux := http.NewServeMux()
-	httpMux.Handle("/", corsMiddleware(mux))
+	httpMux.HandleFunc("/api/v1/data-download", handleDownloadData(managementSvc))
+	httpMux.HandleFunc("/api/v1/data/upload-multipart", handleUploadMultipart(managementSvc))
+	httpMux.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("test ok"))
+	})
+	httpMux.Handle("/api/", corsMiddleware(mux))
 
 	return &Server{
-		grpcServer: grpcServer,
-		httpServer: &http.Server{},
-		mux:        mux,
-		httpMux:    httpMux,
-		cfg:        cfg,
+		grpcServer:    grpcServer,
+		httpServer:    &http.Server{},
+		mux:           mux,
+		httpMux:       httpMux,
+		managementSvc: managementSvc,
+		cfg:           cfg,
 	}
 }
 
@@ -141,4 +152,94 @@ func corsMiddleware(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+func handleUploadMultipart(managementSvc *service.ManagementService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		err := r.ParseMultipartForm(32 << 20) // 32MB max memory
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to parse multipart form: %v", err), http.StatusBadRequest)
+			return
+		}
+
+		file, fileHeader, err := r.FormFile("file")
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to get file: %v", err), http.StatusBadRequest)
+			return
+		}
+		defer file.Close()
+
+		filename := r.FormValue("filename")
+		category := r.FormValue("category")
+
+		if filename == "" {
+			filename = fileHeader.Filename
+		}
+
+		if category == "" {
+			category = "通用"
+		}
+
+		result, err := managementSvc.UploadPresetDataFile(r.Context(), filename, category, fileHeader.Filename, file)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to upload file: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, `{"file_id": "%s", "minio_url": "%s"}`, result.FileId, result.MinioUrl)
+	}
+}
+
+func handleDownloadData(managementSvc *service.ManagementService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Printf("=== handleDownloadData called: %s %s ===\n", r.Method, r.URL.Path)
+
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		fileID := r.URL.Query().Get("file_id")
+		fmt.Printf("File ID: %s\n", fileID)
+		if fileID == "" {
+			http.Error(w, "File ID is required", http.StatusBadRequest)
+			return
+		}
+
+		presignedURL, err := managementSvc.GetPresetDataDownloadURL(r.Context(), fileID)
+		if err != nil {
+			fmt.Printf("Error generating presigned URL: %v\n", err)
+			http.Error(w, fmt.Sprintf("Failed to generate download URL: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, `{"download_url": "%s"}`, presignedURL)
+	}
 }

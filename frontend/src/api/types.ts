@@ -27,8 +27,8 @@ export interface PresetData {
   id: string
   filename: string
   category: string
-  minioUrl: string
-  createdAt: string
+  minio_url: string
+  created_at: string
 }
 
 export interface JobSummary {
@@ -61,10 +61,17 @@ export const algorithmApi = {
   list: (params: { category?: string; language?: string; page?: number; page_size?: number }) =>
     api.get<{ algorithms: Algorithm[]; total: number }>('/api/v1/algorithms', { params }),
 
-  create: (data: { name: string; description: string; language: string; platform: string; category: string; entrypoint: string }) =>
-    api.post<Algorithm>('/api/v1/algorithms', data),
+  get: (id: string) =>
+    api.get<{ algorithm: Algorithm; versions: Version[] }>(`/api/v1/algorithms/${id}`),
 
-  update: (id: string, data: { name: string; description: string; category: string }) =>
+  create: (data: { name: string; description: string; language: string; platform: number; entrypoint: string; tags: string[]; preset_data_id: string; fileName: string; fileData: Uint8Array }) =>
+    api.post<Algorithm>('/api/v1/algorithms', data, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }),
+
+  update: (id: string, data: { name: string; description: string; tags: string[] }) =>
     api.put<Algorithm>(`/api/v1/algorithms/${id}`, data),
 
   createVersion: (algorithmId: string, data: { source_code_zip_url: string; commit_message: string }) =>
@@ -102,4 +109,9 @@ export const jobApi = {
     timeout_seconds?: number
   }) =>
     api.post<{ jobId: string; status: string; result_url: string; message: string }>(`/api/v1/algorithms/${algorithmId}/execute`, data)
+}
+
+export const serverApi = {
+  info: () =>
+    api.get<{ os: string; arch: string; platform: number; platform_name: string }>('/api/v1/server/info')
 }

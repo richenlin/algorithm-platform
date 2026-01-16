@@ -27,11 +27,12 @@ type RedisConfig struct {
 }
 
 type MinIOConfig struct {
-	Endpoint        string
-	AccessKeyID     string
-	SecretAccessKey string
-	Bucket          string
-	UseSSL          bool
+	Endpoint         string
+	ExternalEndpoint string
+	AccessKeyID      string
+	SecretAccessKey  string
+	Bucket           string
+	UseSSL           bool
 }
 
 type DBConfig struct {
@@ -53,11 +54,12 @@ func Default() *Config {
 			DB:   0,
 		},
 		MinIO: MinIOConfig{
-			Endpoint:        "localhost:9000",
-			AccessKeyID:     "minioadmin",
-			SecretAccessKey: "minioadmin",
-			Bucket:          "algorithm-platform",
-			UseSSL:          false,
+			Endpoint:         "minio:9000",
+			ExternalEndpoint: "localhost:9000",
+			AccessKeyID:      "minioadmin",
+			SecretAccessKey:  "minioadmin",
+			Bucket:           "algorithm-platform",
+			UseSSL:           false,
 		},
 	}
 }

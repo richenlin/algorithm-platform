@@ -7,18 +7,20 @@ import (
 	"net/http"
 	"time"
 
-	"algorithm-platform/api/v1/proto"
+	v1 "algorithm-platform/api/v1/proto"
 	"algorithm-platform/internal/config"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/protobuf/proto"
 )
 
 type Server struct {
 	grpcServer *grpc.Server
 	httpServer *http.Server
+	httpMux    *http.ServeMux
 	mux        *runtime.ServeMux
 
 	cfg config.ServerConfig
@@ -26,11 +28,34 @@ type Server struct {
 
 func New(cfg config.ServerConfig) *Server {
 	grpcServer := grpc.NewServer()
-	mux := runtime.NewServeMux()
+
+	mux := runtime.NewServeMux(
+		runtime.WithForwardResponseOption(func(ctx context.Context, w http.ResponseWriter, resp proto.Message) error {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+			w.Header().Set("Access-Control-Expose-Headers", "Content-Type")
+			return nil
+		}),
+		runtime.WithErrorHandler(func(ctx context.Context, mux *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, r *http.Request, err error) {
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+			w.Header().Set("Access-Control-Expose-Headers", "Content-Type")
+
+			runtime.DefaultHTTPErrorHandler(ctx, mux, marshaler, w, r, err)
+		}),
+	)
+
+	httpMux := http.NewServeMux()
+	httpMux.Handle("/", corsMiddleware(mux))
 
 	return &Server{
 		grpcServer: grpcServer,
+		httpServer: &http.Server{},
 		mux:        mux,
+		httpMux:    httpMux,
 		cfg:        cfg,
 	}
 }
@@ -70,10 +95,8 @@ func (s *Server) Start(ctx context.Context) error {
 	reflection.Register(s.grpcServer)
 
 	go func() {
-		s.httpServer = &http.Server{
-			Addr:    fmt.Sprintf("0.0.0.0:%d", s.cfg.HTTPPort),
-			Handler: s.mux,
-		}
+		s.httpServer.Addr = fmt.Sprintf("0.0.0.0:%d", s.cfg.HTTPPort)
+		s.httpServer.Handler = s.httpMux
 
 		if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			panic(err)
@@ -101,4 +124,21 @@ func (s *Server) Stop(ctx context.Context) error {
 
 	s.grpcServer.GracefulStop()
 	return nil
+}
+
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+		w.Header().Set("Access-Control-Expose-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Max-Age", "86400")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }

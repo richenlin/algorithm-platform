@@ -18,11 +18,9 @@ services:
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_BUCKET=algorithm-platform
-      - MYSQL_DSN=root:password@tcp(mysql:3306)/algorithm_platform?charset=utf8mb4&parseTime=True&loc=Local
     depends_on:
       - redis
       - minio
-      - mysql
     restart: unless-stopped
 
   redis:
@@ -34,8 +32,7 @@ services:
     restart: unless-stopped
 
   minio:
-    image: minio/minio
-    command: server /data
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -45,19 +42,8 @@ services:
     volumes:
       - minio_data:/data
     restart: unless-stopped
-
-  mysql:
-    image: mysql:8.0
-    ports:
-      - "3306:3306"
-    environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=algorithm_platform
-    volumes:
-      - mysql_data:/var/lib/mysql
-    restart: unless-stopped
-
-volumes:
-  redis_data:
-  minio_data:
-  mysql_data:
+    command: server /data --console-address ":9001" --address ":9000"
+  
+  volumes:
+    redis_data:
+    minio_data:

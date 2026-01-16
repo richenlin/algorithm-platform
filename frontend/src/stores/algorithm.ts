@@ -24,8 +24,9 @@ export const useAlgorithmStore = defineStore('algorithm', () => {
   async function fetchAlgorithm(id: string) {
     loading.value = true
     try {
-      const response = await algorithmApi.list({ page: 1, page_size: 100 })
-      currentAlgorithm.value = response.data.algorithms.find(a => a.id === id) || null
+      const response = await algorithmApi.get(id)
+      currentAlgorithm.value = response.data.algorithm
+      versions.value = response.data.versions
     } catch (error) {
       console.error('Failed to fetch algorithm:', error)
     } finally {
@@ -33,7 +34,7 @@ export const useAlgorithmStore = defineStore('algorithm', () => {
     }
   }
 
-  async function createAlgorithm(data: { name: string; description: string; language: string; platform: string; category: string; entrypoint: string }) {
+  async function createAlgorithm(data: { name: string; description: string; language: string; platform: number; entrypoint: string; tags: string[]; preset_data_id: string; fileName: string; fileData: Uint8Array }) {
     loading.value = true
     try {
       const response = await algorithmApi.create(data)
@@ -47,7 +48,7 @@ export const useAlgorithmStore = defineStore('algorithm', () => {
     }
   }
 
-  async function updateAlgorithm(id: string, data: { name: string; description: string; category: string }) {
+  async function updateAlgorithm(id: string, data: { name: string; description: string; tags: string[] }) {
     loading.value = true
     try {
       const response = await algorithmApi.update(id, data)

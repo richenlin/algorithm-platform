@@ -11,10 +11,11 @@ const jobStore = useJobStore()
 
 const showCreateVersion = ref(false)
 const showExecuteModal = ref(false)
+const creatingVersion = ref(false)
 const versionFormData = ref({
-  source_code_zip_url: '',
   commit_message: ''
 })
+const selectedVersionFile = ref<File | undefined>(undefined)
 const executeFormData = ref({
   mode: 'batch',
   params: '{}',
@@ -36,15 +37,53 @@ onUnmounted(() => {
 })
 
 async function handleCreateVersion() {
+  if (creatingVersion.value || !selectedVersionFile.value) {
+    alert('请选择文件')
+    return
+  }
+  
+  creatingVersion.value = true
   try {
-    await algorithmStore.createVersion(algorithmId.value, versionFormData.value)
+    const arrayBuffer = await selectedVersionFile.value.arrayBuffer()
+    const uint8Array = new Uint8Array(arrayBuffer)
+    const binaryString = Array.from(uint8Array, byte => String.fromCharCode(byte)).join('')
+    const fileDataBase64 = btoa(binaryString)
+    
+    const response = await fetch(`http://localhost:8080/api/v1/algorithms/${algorithmId.value}/versions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        source_code_zip_url: '',
+        commit_message: versionFormData.value.commit_message,
+        file_name: selectedVersionFile.value.name,
+        file_data: fileDataBase64
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error('Failed to create version')
+    }
+    
+    await algorithmStore.fetchAlgorithm(algorithmId.value)
     showCreateVersion.value = false
     versionFormData.value = {
-      source_code_zip_url: '',
       commit_message: ''
     }
+    selectedVersionFile.value = undefined
   } catch (error) {
     console.error('Failed to create version:', error)
+    alert('创建版本失败，请重试')
+  } finally {
+    creatingVersion.value = false
+  }
+}
+
+function handleVersionFileChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files.length > 0) {
+    selectedVersionFile.value = target.files[0]
   }
 }
 
@@ -64,11 +103,37 @@ async function handleExecute() {
 }
 
 async function handleRollback(versionId: string) {
+  if (!confirm('确认回滚到此版本？')) return
+  
   try {
-    await algorithmStore.rollbackVersion(algorithmId.value, versionId)
+    const response = await fetch(`http://localhost:8080/api/v1/algorithms/${algorithmId.value}/versions/${versionId}/rollback`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error('Failed to rollback version')
+    }
+    
+    await algorithmStore.fetchAlgorithm(algorithmId.value)
+    alert('回滚成功')
   } catch (error) {
     console.error('Failed to rollback version:', error)
+    alert('回滚失败，请重试')
   }
+}
+
+function getPlatformName(value: number): string {
+  const platformOptions = [
+    { value: 1, label: 'Linux x86_64' },
+    { value: 2, label: 'Linux ARM64' },
+    { value: 3, label: 'Windows x86_64' },
+    { value: 4, label: 'macOS ARM64' }
+  ]
+  const platform = platformOptions.find(p => p.value === value)
+  return platform ? platform.label : 'Unknown'
 }
 
 function getStatusClass(status: string) {
@@ -110,23 +175,28 @@ function getStatusClass(status: string) {
             </div>
             <div>
               <label>平台</label>
-              <span>{{ algorithm.platform }}</span>
-            </div>
-            <div>
-              <label>类别</label>
-              <span>{{ algorithm.category }}</span>
+              <span>{{ getPlatformName(algorithm.platform) }}</span>
             </div>
             <div>
               <label>入口文件</label>
               <span>{{ algorithm.entrypoint }}</span>
             </div>
             <div>
-              <label>当前版本</label>
-              <span>{{ algorithm.currentVersionId }}</span>
+              <label>标签</label>
+              <div class="tags-cell">
+                <span v-for="tag in algorithm.tags" :key="tag" class="tag">
+                  {{ tag }}
+                </span>
+                <span v-if="!algorithm.tags || algorithm.tags.length === 0" class="empty-tags">-</span>
+              </div>
             </div>
             <div>
               <label>创建时间</label>
               <span>{{ new Date(algorithm.createdAt).toLocaleString() }}</span>
+            </div>
+            <div>
+              <label>更新时间</label>
+              <span>{{ new Date(algorithm.updatedAt).toLocaleString() }}</span>
             </div>
           </div>
           <p class="description">{{ algorithm.description }}</p>
@@ -214,16 +284,33 @@ function getStatusClass(status: string) {
         </div>
         <form @submit.prevent="handleCreateVersion">
           <div class="form-item">
-            <label>源代码 ZIP URL <span class="required">*</span></label>
-            <input v-model="versionFormData.source_code_zip_url" placeholder="https://..." required />
+            <label>上传文件 <span class="required">*</span></label>
+            <div class="file-upload">
+              <input
+                type="file"
+                @change="handleVersionFileChange"
+                accept=".zip"
+                id="version-file"
+                required
+              />
+              <label for="version-file" class="upload-btn">
+                <span class="icon">📁</span>
+                <span class="text">选择文件</span>
+              </label>
+              <span v-if="selectedVersionFile" class="file-name">{{ selectedVersionFile.name }}</span>
+            </div>
           </div>
           <div class="form-item">
             <label>提交信息 <span class="required">*</span></label>
             <textarea v-model="versionFormData.commit_message" rows="3" placeholder="描述本次更新" required></textarea>
           </div>
           <div class="modal-footer">
-            <button class="secondary" @click="showCreateVersion = false">取消</button>
-             <button class="btn-primary">创建</button>
+            <button type="button" class="secondary" @click="showCreateVersion = false" :disabled="creatingVersion">
+              取消
+            </button>
+             <button type="submit" class="btn-primary" :disabled="creatingVersion">
+              {{ creatingVersion ? '创建中...' : '创建' }}
+            </button>
            </div>
         </form>
       </div>
@@ -340,6 +427,64 @@ function getStatusClass(status: string) {
 .info-grid span {
   font-size: 14px;
   color: var(--text-primary);
+}
+
+.tags-cell {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tags-cell .tag {
+  padding: 2px 8px;
+  background: rgba(64, 158, 255, 0.1);
+  border: 1px solid rgba(64, 158, 255, 0.3);
+  border-radius: 12px;
+  font-size: 11px;
+  color: var(--accent-primary);
+}
+
+.empty-tags {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.file-upload {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.upload-btn:hover {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: white;
+}
+
+.upload-btn .icon {
+  font-size: var(--font-size-lg);
+}
+
+.file-name {
+  font-size: var(--font-size-sm);
+  color: var(--accent-primary);
+  font-weight: 500;
+}
+
+[type="file"] {
+  display: none;
 }
 
 .description {

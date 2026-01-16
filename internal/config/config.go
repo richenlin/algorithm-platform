@@ -5,7 +5,6 @@ type Config struct {
 	Docker DockerConfig
 	Redis  RedisConfig
 	MinIO  MinIOConfig
-	DB     DBConfig
 }
 
 type ServerConfig struct {
@@ -33,10 +32,6 @@ type MinIOConfig struct {
 	SecretAccessKey  string
 	Bucket           string
 	UseSSL           bool
-}
-
-type DBConfig struct {
-	DSN string
 }
 
 func Default() *Config {

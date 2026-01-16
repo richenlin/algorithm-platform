@@ -29,6 +29,11 @@
     {"id": "F026", "name": "数据列表倒序排序", "priority": 10, "status": "completed"},
     {"id": "F027", "name": "本地开发模式支持", "priority": 10, "status": "completed"},
     {"id": "F028", "name": "数据库从MySQL迁移到SQLite", "priority": 8, "status": "completed"},
-    {"id": "F029", "name": "MinIO数据持久化（自动备份）", "priority": 8, "status": "completed"}
+    {"id": "F029", "name": "MinIO数据持久化（自动备份）", "priority": 8, "status": "completed"},
+    {"id": "F030", "name": "同步/异步执行模式", "priority": 9, "status": "completed"},
+    {"id": "F031", "name": "平台一致性检查", "priority": 8, "status": "completed"},
+    {"id": "F032", "name": "预置数据自动下载", "priority": 8, "status": "completed"},
+    {"id": "F033", "name": "任务ID返回与查询", "priority": 9, "status": "completed"},
+    {"id": "F034", "name": "参数存储和Webhook通知", "priority": 9, "status": "completed"}
   ]
 }

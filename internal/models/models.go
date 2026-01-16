@@ -68,3 +68,7 @@ func AutoMigrate(db *gorm.DB) error {
 		&PresetData{},
 	)
 }
+
+func (Job) TableName() string {
+	return "jobs"
+}

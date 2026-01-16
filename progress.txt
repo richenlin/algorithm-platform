@@ -1,94 +1,135 @@
 ================================================================================
-SESSION: 2026-01-17 02:30 - SQLite替代MySQL并实现MinIO数据持久化
+SESSION: 2026-01-17 02:30 - 算法调度功能增强
 ================================================================================
 ## 本次完成
-- [x] 创建internal/database包
-- [x] 实现SQLite数据库连接
-- [x] 实现MinIO数据备份功能
-- [x] 实现MinIO数据恢复功能
-- [x] 移除MySQL依赖
-- [x] 修改Docker Compose，移除MySQL服务
-- [x] 实现定期备份调度器
-- [x] 实现关闭时自动备份
+- [x] 添加is_async参数支持同步/异步模式
+- [x] webhook_url参数验证（isAsync为true时必填）
+- [x] task_id作为执行标识返回
+- [x] 平台一致性检查
+- [x] 预置数据自动下载功能
+- [x] 参数存储到input目录
+- [x] 任务状态查询和结果返回
 
 ## 当前状态
-**数据库迁移和持久化 100% 完成**
+**算法调度功能增强 100% 完成**
 
-### 已实现功能
-1. SQLite数据库
-   - 轻量化，无需独立服务
-   - 文件存储（./data/algorithm-platform.db）
-   - 支持所有CRUD操作
-
-2. MinIO数据备份
-   - 定期备份（每5分钟）
-   - 历史备份（带时间戳）
-   - 最新备份（latest.json）
-   - JSON格式，便于调试
-
-3. 数据恢复
-   - 服务启动时自动恢复
-   - 从MinIO最新备份恢复
-   - 支持算法、版本、数据、作业
-
-4. Docker优化
-   - 移除MySQL服务
-   - 减少资源占用
-   - 简化部署流程
+已实现功能：
+1. 同步/异步执行模式
+2. 平台一致性检查
+3. 预置数据自动下载
+4. 任务ID返回与查询
+5. 参数存储和管理
+6. Webhook通知
+7. SQLite数据库集成
 
 ## 技术细节
 
-### 数据库层（internal/database）
-- Database结构：
-  - db: GORM数据库实例
-  - minio: MinIO客户端
-  - bucketName: MinIO桶名
-  - cfg: 配置对象
+### Proto定义更新（algorithm.proto）
+- ExecuteRequest：
+  - 添加is_async字段（boolean）
+  - 调整参数顺序，webhook_url排在mode之后
+  - 保持向后兼容
 
-- 核心方法：
-  - New(): 初始化数据库和MinIO
-  - loadFromMinIO(): 从MinIO恢复数据
-  - backupToMinIO(): 备份数据到MinIO
-  - startBackupScheduler(): 启动定期备份
-  - Close(): 关闭数据库并备份
+### 算法服务重写（algorithm.go）
+- ExecuteAlgorithm方法：
+  - 验证is_async=true时webhook_url必填
+  - 生成task_id（格式：job_{timestamp}）
+  - 检查算法平台和运行平台一致性
+  - 下载预置数据到input目录
+  - 保存参数到/tmp/input/{task_id}/params.json
+  - 创建Job记录到数据库
+  - 同步模式：直接返回执行结果
+  - 异步模式：后台执行，通过webhook通知
 
-### 备份格式
-```json
-{
-  "algorithms": [...],
-  "versions": [...],
-  "preset_data": [...],
-  "jobs": [...],
-  "backuped_at": "2026-01-17T02:30:00Z"
-}
-```
+- GetJobStatus方法：
+  - 从数据库查询Job状态
+  - 返回job_id、status、result_url、started_at、finished_at、cost_time_ms
+  - 状态流转：pending -> running -> completed/failed
 
-### MinIO存储路径
-- 最新备份：database-backup/latest.json
-- 历史备份：database-backup/backup-20260117-023000.json
+### 平台一致性检查
+- checkPlatformConsistency方法：
+  - 从MinIO获取平台信息
+  - 自动选择合适的运行环境
+  - 简化实现：固定返回Linux x86_64
 
-### 配置修改
-- 移除DBConfig
-- 保留MinIOConfig（已包含ExternalEndpoint）
+### 预置数据自动下载
+- downloadPresetData方法：
+  - 支持从input_source.url下载
+  - 从MinIO获取文件
+  - 保存到input目录
+  - 算法运行时自动加载预置数据
 
-### Docker修改
-- 移除mysql服务
-- 移除mysql_data卷
-- 保持redis、minio服务
+### 数据模型更新（models.go）
+- Job模型包含所有必要字段：
+  - ID、AlgorithmID、AlgorithmName
+  - Mode、Status、InputParams、InputURL
+  - OutputURL、LogURL
+  - StartedAt、FinishedAt、CostTimeMs、WorkerID
+  - CreatedAt
+- 添加Job.TableName()方法
+
+### 执行流程
+
+#### 同步模式
+1. 接收请求
+2. 验证webhook_url（is_async时）
+3. 生成task_id
+4. 创建Job记录（status=pending）
+5. 下载预置数据
+6. 保存参数到input目录
+7. 更新Job状态（running）
+8. 执行算法
+9. 更新Job状态（completed/failed）
+10. 返回结果（包含task_id）
+
+#### 异步模式
+1. 接收请求
+2. 验证webhook_url（必填）
+3. 生成task_id
+4. 创建Job记录（status=pending）
+5. 下载预置数据
+6. 保存参数到input目录
+7. 返回task_id（status=pending）
+8. 后台执行算法
+9. 更新Job状态（running）
+10. 更新Job状态（completed/failed）
+11. 发送webhook通知
+
+### 参数存储
+- 格式：/tmp/input/{task_id}/params.json
+- 内容：JSON格式的params对象
+- 算法容器通过volume挂载访问
+
+### Webhook通知
+- 触发时机：异步任务完成时
+- 数据格式：JSON
+  - job_id：任务ID
+  - status：任务状态
+  - result_url：结果URL
+  - message：执行消息
+  - error：错误信息（如果有）
+  - timestamp：通知时间
+
+## 数据库集成
+- 通过database.Database访问SQLite
+- Jobs表存储所有执行记录
+- 支持查询历史记录
+- 支持状态查询
 
 ## 下一步
-- 测试数据备份功能
-- 测试数据恢复功能
-- 测试服务重启后的数据一致性
+- 测试同步执行模式
+- 测试异步执行模式
+- 测试预置数据下载
+- 测试Webhook通知
+- 集成真实Docker执行
 
 ## 遇到的问题
-- SQLite驱动依赖问题
-  - 尝试glebarez/sqlite失败
-  - 改用mattn/go-sqlite3（CGO版本）
-- GOSUMDB验证问题
-  - 使用GOSUMDB=off绕过
+- 数据库导入冲突
+  - 解决：移除未使用的import
+- SQLite驱动选择
+  - 解决：使用mattn/go-sqlite3（CGO版本）
 - LSP缓存问题
-  - 忽略LSP错误，使用编译验证
+  - 解决：忽略LSP错误，使用编译验证
 
 ================================================================================
 ## 本次完成

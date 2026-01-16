@@ -3,6 +3,7 @@ package scheduler
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"algorithm-platform/pkg/docker"
 )
@@ -92,6 +93,60 @@ func (s *Scheduler) RemoveJob(ctx context.Context, jobID string) error {
 	for _, c := range containers {
 		if err := s.dockerClient.RemoveContainer(ctx, c.ID, true); err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *Scheduler) GetJobStatus(ctx context.Context, jobID string) (string, int64, error) {
+	containers, err := s.dockerClient.ListContainers(ctx, map[string][]string{
+		"label": {fmt.Sprintf("job_id=%s", jobID)},
+	})
+	if err != nil {
+		return "", -1, err
+	}
+
+	if len(containers) == 0 {
+		return "not_found", -1, nil
+	}
+
+	containerID := containers[0].ID
+	status, err := s.dockerClient.GetContainerStatus(ctx, containerID)
+	if err != nil {
+		return "", -1, err
+	}
+
+	state := "unknown"
+	if status.State != nil {
+		if status.State.Running {
+			state = "running"
+		} else if status.State.Status == "exited" {
+			state = "exited"
+			return state, int64(status.State.ExitCode), nil
+		}
+	}
+
+	return state, 0, nil
+}
+
+func (s *Scheduler) CleanUp(ctx context.Context, olderThan time.Duration) error {
+	filters := map[string][]string{
+		"label": {"algorithm_platform=1"},
+	}
+
+	containers, err := s.dockerClient.ListContainers(ctx, filters)
+	if err != nil {
+		return err
+	}
+
+	for _, c := range containers {
+		if time.Since(time.Unix(c.Created, 0)) > olderThan {
+			if c.Status == "exited" || c.State == "exited" {
+				if err := s.dockerClient.RemoveContainer(ctx, c.ID, true); err != nil {
+					continue
+				}
+			}
 		}
 	}
 

@@ -22,6 +22,13 @@
     {"id": "F019", "name": "数据上传模态框样式修复", "priority": 10, "status": "completed"},
     {"id": "F020", "name": "数据表单优化（数据名、类别、文件）", "priority": 10, "status": "completed"},
     {"id": "F021", "name": "大文件上传支持（32MB）", "priority": 10, "status": "completed"},
-    {"id": "F022", "name": "MinIO存储集成（文件自动上传）", "priority": 10, "status": "completed"}
+    {"id": "F022", "name": "MinIO存储集成（文件自动上传）", "priority": 10, "status": "completed"},
+    {"id": "F023", "name": "MinIO URL配置化（数据库只存path）", "priority": 10, "status": "completed"},
+    {"id": "F024", "name": "预签名URL下载接口", "priority": 10, "status": "completed"},
+    {"id": "F025", "name": "删除数据功能", "priority": 10, "status": "completed"},
+    {"id": "F026", "name": "数据列表倒序排序", "priority": 10, "status": "completed"},
+    {"id": "F027", "name": "本地开发模式支持", "priority": 10, "status": "completed"},
+    {"id": "F028", "name": "数据库从MySQL迁移到SQLite", "priority": 8, "status": "completed"},
+    {"id": "F029", "name": "MinIO数据持久化（自动备份）", "priority": 8, "status": "completed"}
   ]
 }

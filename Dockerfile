@@ -1,4 +1,4 @@
-FROM golang:1.23-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
@@ -7,7 +7,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o /platform-core ./cmd/server
+RUN go mod tidy && go build -o /platform-core ./cmd/server
 
 FROM alpine:latest
 

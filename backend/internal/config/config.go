@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -46,9 +47,14 @@ type MinIOConfig struct {
 type DatabaseConfig struct {
 	Type string `yaml:"type"` // sqlite, postgres
 	// SQLite 配置
-	SQLitePath string `yaml:"sqlite_path"`
+	SQLite SQLiteConfig `yaml:"sqlite"`
 	// PostgreSQL 配置
 	PostgreSQL PostgreSQLConfig `yaml:"postgresql"`
+}
+
+type SQLiteConfig struct {
+	Path                  string        `yaml:"path"`
+	WALCheckpointInterval time.Duration `yaml:"wal_checkpoint_interval"`
 }
 
 type PostgreSQLConfig struct {
@@ -119,8 +125,11 @@ func Default() *Config {
 			UseSSL:           false,
 		},
 		Database: DatabaseConfig{
-			Type:       "sqlite",
-			SQLitePath: "./data/algorithm-platform.db",
+			Type: "sqlite",
+			SQLite: SQLiteConfig{
+				Path:                  "./data/algorithm-platform.db",
+				WALCheckpointInterval: 30 * time.Second,
+			},
 			PostgreSQL: PostgreSQLConfig{
 				Host:     "localhost",
 				Port:     5432,

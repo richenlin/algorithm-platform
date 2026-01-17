@@ -49,7 +49,9 @@ database:
   type: "sqlite"
   
   # SQLite configuration (used when type is "sqlite")
-  sqlite_path: "./data/algorithm-platform.db"
+  sqlite:
+    path: "./data/algorithm-platform.db"
+    wal_checkpoint_interval: 30s
   
   # PostgreSQL configuration (used when type is "postgres")
   postgresql:

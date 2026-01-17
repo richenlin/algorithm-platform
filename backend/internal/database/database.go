@@ -1,7 +1,6 @@
 package database
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -15,8 +14,6 @@ type Database struct {
 	db       *gorm.DB
 	provider DBProvider
 	cfg      *config.Config
-	// SQLite 专用的备份管理器（仅在使用 SQLite 时初始化）
-	backupManager *SQLiteBackupManager
 }
 
 func New(cfg *config.Config) (*Database, error) {
@@ -25,12 +22,7 @@ func New(cfg *config.Config) (*Database, error) {
 	dbType := strings.ToLower(cfg.Database.Type)
 	switch dbType {
 	case "sqlite", "":
-		// 默认使用 SQLite
-		dbPath := cfg.Database.SQLitePath
-		if dbPath == "" {
-			dbPath = "./data/algorithm-platform.db"
-		}
-		provider = NewSQLiteProvider(dbPath)
+		provider = NewSQLiteProvider(cfg)
 	case "postgres", "postgresql":
 		// 使用 PostgreSQL
 		provider = NewPostgreSQLProvider(PostgreSQLConfig{
@@ -80,32 +72,7 @@ func New(cfg *config.Config) (*Database, error) {
 		fmt.Printf("Warning: database health check failed: %v\n", err)
 	}
 
-	// SQLite 特有：初始化备份管理器
-	if dbType == "sqlite" || dbType == "" {
-		if err := database.initSQLiteBackup(cfg.MinIO.Bucket); err != nil {
-			fmt.Printf("Warning: failed to initialize SQLite backup: %v\n", err)
-		}
-	}
-
 	return database, nil
-}
-
-// initSQLiteBackup 初始化 SQLite 备份管理器（仅 SQLite 使用）
-func (d *Database) initSQLiteBackup(bucketName string) error {
-	// 创建 SQLite 备份管理器
-	d.backupManager = NewSQLiteBackupManager(d.db, d.cfg, bucketName)
-
-	// 从 MinIO 加载备份数据
-	if err := d.backupManager.LoadFromMinIO(context.Background()); err != nil {
-		fmt.Printf("Warning: failed to load data from MinIO: %v\n", err)
-	}
-
-	// 启动备份调度器
-	if err := d.backupManager.StartBackupScheduler(context.Background()); err != nil {
-		return fmt.Errorf("failed to start backup scheduler: %w", err)
-	}
-
-	return nil
 }
 
 func (d *Database) DB() *gorm.DB {
@@ -113,27 +80,6 @@ func (d *Database) DB() *gorm.DB {
 }
 
 func (d *Database) Close() error {
-	// SQLite 特有：执行最终备份
-	if d.backupManager != nil {
-		ctx := context.Background()
-		if err := d.backupManager.BackupToMinIO(ctx); err != nil {
-			fmt.Printf("Warning: final backup failed: %v\n", err)
-		}
-
-		// 备份数据库文件
-		if sqliteProvider, ok := d.provider.(*SQLiteProvider); ok {
-			backupPath := fmt.Sprintf("./data/backup-final.db")
-			if err := sqliteProvider.Backup(backupPath); err != nil {
-				fmt.Printf("Warning: SQLite file backup failed: %v\n", err)
-			} else {
-				fmt.Printf("SQLite database backed up to: %s\n", backupPath)
-			}
-		}
-
-		// 停止备份调度器
-		d.backupManager.Stop()
-	}
-
 	// 关闭数据库连接
 	if d.provider != nil {
 		return d.provider.Close()

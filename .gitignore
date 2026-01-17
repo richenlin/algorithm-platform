@@ -55,3 +55,4 @@ runner/runner
 *.backup
 back.tar.gz
 backend/runner/runner
+backend/server

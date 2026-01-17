@@ -13,7 +13,14 @@ func TestSQLiteProvider(t *testing.T) {
 	dbPath := filepath.Join(tmpDir, "test.db")
 
 	// 创建 SQLite 提供者
-	provider := NewSQLiteProvider(dbPath)
+	provider := NewSQLiteProvider(&config.Config{
+		Database: config.DatabaseConfig{
+			Type: "sqlite",
+			SQLite: config.SQLiteConfig{
+				Path: dbPath,
+			},
+		},
+	})
 
 	// 测试打开数据库
 	db, err := provider.Open()
@@ -76,8 +83,10 @@ func TestDatabaseInitialization(t *testing.T) {
 			UseSSL:           false,
 		},
 		Database: config.DatabaseConfig{
-			Type:       "sqlite",
-			SQLitePath: ":memory:",
+			Type: "sqlite",
+			SQLite: config.SQLiteConfig{
+				Path: ":memory:",
+			},
 		},
 	}
 

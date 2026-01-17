@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"algorithm-platform/internal/config"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -17,31 +19,25 @@ type SQLiteProvider struct {
 	db                    *gorm.DB
 	walCheckpointInterval time.Duration
 	stopCheckpoint        chan struct{}
+	backupManager         *SQLiteBackupManager
+	cfg                   *config.Config
 }
 
 // SQLiteConfig SQLite 配置选项
 type SQLiteConfig struct {
 	Path                  string
 	WALCheckpointInterval time.Duration // WAL checkpoint 间隔，默认 30 秒
+	Config                *config.Config
 }
 
 // NewSQLiteProvider 创建 SQLite 数据库提供者
-func NewSQLiteProvider(dbPath string) *SQLiteProvider {
-	return NewSQLiteProviderWithConfig(SQLiteConfig{
-		Path:                  dbPath,
-		WALCheckpointInterval: 30 * time.Second,
-	})
-}
-
-// NewSQLiteProviderWithConfig 使用配置创建 SQLite 数据库提供者
-func NewSQLiteProviderWithConfig(cfg SQLiteConfig) *SQLiteProvider {
-	if cfg.WALCheckpointInterval == 0 {
-		cfg.WALCheckpointInterval = 30 * time.Second
-	}
+func NewSQLiteProvider(cfg *config.Config) *SQLiteProvider {
+	// 默认使用 SQLite
 	return &SQLiteProvider{
-		dbPath:                cfg.Path,
-		walCheckpointInterval: cfg.WALCheckpointInterval,
+		dbPath:                cfg.Database.SQLite.Path,
+		walCheckpointInterval: cfg.Database.SQLite.WALCheckpointInterval,
 		stopCheckpoint:        make(chan struct{}),
+		cfg:                   cfg,
 	}
 }
 
@@ -151,7 +147,48 @@ func (p *SQLiteProvider) Configure(db *gorm.DB) error {
 	sqlDB.SetMaxIdleConns(2)    // 保持空闲连接
 	sqlDB.SetConnMaxLifetime(0) // 连接不过期
 
+	// 如果有配置，初始化备份管理器
+	if p.cfg != nil {
+		if err := p.initBackupManager(); err != nil {
+			fmt.Printf("Warning: failed to initialize backup manager: %v\n", err)
+		}
+	}
+
 	return nil
+}
+
+// initBackupManager 初始化备份管理器（延迟初始化，在数据库打开后）
+func (p *SQLiteProvider) initBackupManager() error {
+	if p.cfg == nil {
+		// 尝试加载默认配置
+		p.cfg = config.LoadOrDefault()
+	}
+
+	// 创建备份管理器
+	backupManager, err := NewSQLiteBackupManager(p.db, p.cfg)
+	if err != nil {
+		return fmt.Errorf("failed to create backup manager: %w", err)
+	}
+
+	p.backupManager = backupManager
+
+	// 从 MinIO 加载备份数据
+	if err := p.backupManager.LoadFromMinIO(); err != nil {
+		fmt.Printf("Warning: failed to load data from MinIO: %v\n", err)
+	}
+
+	// 启动备份调度器
+	if err := p.backupManager.StartBackupScheduler(); err != nil {
+		return fmt.Errorf("failed to start backup scheduler: %w", err)
+	}
+
+	fmt.Println("SQLite backup manager initialized")
+	return nil
+}
+
+// SetConfig 设置配置（用于支持备份功能）
+func (p *SQLiteProvider) SetConfig(cfg *config.Config) {
+	p.cfg = cfg
 }
 
 // walCheckpointWorker 定期执行 WAL checkpoint
@@ -197,6 +234,23 @@ func (p *SQLiteProvider) checkpoint() error {
 
 // Close 关闭 SQLite 数据库连接
 func (p *SQLiteProvider) Close() error {
+	// 停止备份管理器
+	if p.backupManager != nil {
+		if err := p.backupManager.BackupToMinIO(); err != nil {
+			fmt.Printf("Warning: final backup failed: %v\n", err)
+		}
+
+		// 备份数据库文件
+		backupPath := "./data/backup-final.db"
+		if err := p.Backup(backupPath); err != nil {
+			fmt.Printf("Warning: SQLite file backup failed: %v\n", err)
+		} else {
+			fmt.Printf("SQLite database backed up to: %s\n", backupPath)
+		}
+
+		p.backupManager.Stop()
+	}
+
 	// 停止 checkpoint worker
 	close(p.stopCheckpoint)
 

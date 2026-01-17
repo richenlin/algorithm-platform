@@ -29,25 +29,29 @@ type SQLiteBackupManager struct {
 }
 
 // NewSQLiteBackupManager 创建 SQLite 备份管理器
-func NewSQLiteBackupManager(db *gorm.DB, cfg *config.Config, bucketName string) *SQLiteBackupManager {
+func NewSQLiteBackupManager(db *gorm.DB, cfg *config.Config) (*SQLiteBackupManager, error) {
+	// 初始化 MinIO 客户端
 	minioClient, err := minio.New(cfg.MinIO.Endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(cfg.MinIO.AccessKeyID, cfg.MinIO.SecretAccessKey, ""),
 		Secure: cfg.MinIO.UseSSL,
 	})
 	if err != nil {
-		fmt.Errorf("failed to initialize MinIO client: %w", err)
+		return nil, fmt.Errorf("failed to initialize MinIO client: %w", err)
 	}
+
 	return &SQLiteBackupManager{
 		db:             db,
 		minio:          minioClient,
-		bucketName:     bucketName,
+		bucketName:     cfg.MinIO.Bucket,
 		stopBackup:     make(chan struct{}),
 		backupInterval: 5 * time.Minute,
-	}
+	}, nil
 }
 
 // LoadFromMinIO 从 MinIO 加载备份数据
-func (m *SQLiteBackupManager) LoadFromMinIO(ctx context.Context) error {
+func (m *SQLiteBackupManager) LoadFromMinIO() error {
+	ctx := context.Background()
+
 	exists, err := m.minio.BucketExists(ctx, m.bucketName)
 	if err != nil {
 		return fmt.Errorf("failed to check bucket existence: %w", err)
@@ -59,7 +63,7 @@ func (m *SQLiteBackupManager) LoadFromMinIO(ctx context.Context) error {
 	backupPath := "database-backup/latest.json"
 	obj, err := m.minio.GetObject(ctx, m.bucketName, backupPath, minio.GetObjectOptions{})
 	if err != nil {
-		return nil
+		return nil // 没有备份文件，不是错误
 	}
 	defer obj.Close()
 
@@ -101,7 +105,9 @@ func (m *SQLiteBackupManager) LoadFromMinIO(ctx context.Context) error {
 }
 
 // BackupToMinIO 备份数据到 MinIO 和本地
-func (m *SQLiteBackupManager) BackupToMinIO(ctx context.Context) error {
+func (m *SQLiteBackupManager) BackupToMinIO() error {
+	ctx := context.Background()
+
 	// 获取所有数据
 	var algorithms []models.Algorithm
 	if err := m.db.Find(&algorithms).Error; err != nil {
@@ -175,7 +181,7 @@ func (m *SQLiteBackupManager) BackupToMinIO(ctx context.Context) error {
 	fmt.Printf("SQLite backup saved: MinIO=%s, Local=%s\n", backupPath, timestamp)
 
 	// 4. 异步清理旧备份
-	go m.cleanupOldBackups(ctx)
+	go m.cleanupOldBackups()
 
 	return nil
 }
@@ -197,7 +203,9 @@ func (m *SQLiteBackupManager) saveLocalBackup(data []byte, timestamp string) err
 }
 
 // cleanupOldBackups 清理旧备份
-func (m *SQLiteBackupManager) cleanupOldBackups(ctx context.Context) {
+func (m *SQLiteBackupManager) cleanupOldBackups() {
+	ctx := context.Background()
+
 	// 清理 MinIO 旧备份（保留最近 10 个）
 	objectCh := m.minio.ListObjects(ctx, m.bucketName, minio.ListObjectsOptions{
 		Prefix:    "database-backup/backup-",
@@ -253,19 +261,17 @@ func (m *SQLiteBackupManager) cleanupLocalBackups() {
 }
 
 // StartBackupScheduler 启动备份调度器
-func (m *SQLiteBackupManager) StartBackupScheduler(ctx context.Context) error {
+func (m *SQLiteBackupManager) StartBackupScheduler() error {
 	ticker := time.NewTicker(m.backupInterval)
 
 	go func() {
 		defer ticker.Stop()
 		for {
 			select {
-			case <-ctx.Done():
-				return
 			case <-m.stopBackup:
 				return
 			case <-ticker.C:
-				if err := m.BackupToMinIO(context.Background()); err != nil {
+				if err := m.BackupToMinIO(); err != nil {
 					fmt.Printf("SQLite backup failed: %v\n", err)
 				}
 			}

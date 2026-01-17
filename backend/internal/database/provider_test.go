@@ -1,14 +1,19 @@
 package database
 
 import (
+	"path/filepath"
 	"testing"
 
 	"algorithm-platform/internal/config"
 )
 
 func TestSQLiteProvider(t *testing.T) {
+	// 使用临时文件而不是内存数据库（内存数据库不支持 WAL）
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "test.db")
+
 	// 创建 SQLite 提供者
-	provider := NewSQLiteProvider(":memory:")
+	provider := NewSQLiteProvider(dbPath)
 
 	// 测试打开数据库
 	db, err := provider.Open()
@@ -31,6 +36,21 @@ func TestSQLiteProvider(t *testing.T) {
 	// 验证名称
 	if provider.Name() != "SQLite" {
 		t.Errorf("Expected provider name 'SQLite', got '%s'", provider.Name())
+	}
+
+	// 测试健康检查
+	err = provider.HealthCheck()
+	if err != nil {
+		t.Fatalf("Health check failed: %v", err)
+	}
+
+	// 测试获取统计信息
+	stats, err := provider.GetStats()
+	if err != nil {
+		t.Fatalf("Failed to get stats: %v", err)
+	}
+	if stats["page_count"] == nil {
+		t.Error("Expected page_count in stats")
 	}
 
 	// 测试关闭

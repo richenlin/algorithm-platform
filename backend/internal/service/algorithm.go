@@ -9,21 +9,34 @@ import (
 	"time"
 
 	v1 "algorithm-platform/api/v1/proto"
+	"algorithm-platform/internal/config"
 	"algorithm-platform/internal/database"
 	"algorithm-platform/internal/models"
 
 	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type AlgorithmService struct {
 	v1.UnimplementedAlgorithmServiceServer
-	db *database.Database
+	db          *database.Database
+	cfg         *config.Config
+	minioClient *minio.Client
 }
 
-func NewAlgorithmService(db *database.Database) *AlgorithmService {
+func NewAlgorithmService(db *database.Database, cfg *config.Config) *AlgorithmService {
+	minioClient, err := minio.New(cfg.MinIO.Endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(cfg.MinIO.AccessKeyID, cfg.MinIO.SecretAccessKey, ""),
+		Secure: cfg.MinIO.UseSSL,
+	})
+	if err != nil {
+		fmt.Printf("Failed to initialize MinIO client: %v\n", err)
+	}
 	return &AlgorithmService{
-		db: db,
+		db:          db,
+		cfg:         cfg,
+		minioClient: minioClient,
 	}
 }
 
@@ -132,15 +145,14 @@ func (s *AlgorithmService) GetJobStatus(ctx context.Context, req *v1.GetJobStatu
 }
 
 func (s *AlgorithmService) checkPlatformConsistency(algorithmPlatform string) (*v1.GetServerInfoResponse, error) {
-	minioClient := s.db.MinIO()
 	bucketName := "algorithm-platform"
 
-	exists, err := minioClient.BucketExists(context.Background(), bucketName)
+	exists, err := s.minioClient.BucketExists(context.Background(), bucketName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check MinIO bucket: %w", err)
 	}
 	if !exists {
-		if err := minioClient.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{}); err != nil {
+		if err := s.minioClient.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{}); err != nil {
 			return nil, fmt.Errorf("failed to create MinIO bucket: %w", err)
 		}
 	}
@@ -158,7 +170,6 @@ func (s *AlgorithmService) downloadPresetData(ctx context.Context, inputSource *
 		return nil
 	}
 
-	minioClient := s.db.MinIO()
 	bucketName := "algorithm-platform"
 
 	presetData := &models.PresetData{}
@@ -179,7 +190,7 @@ func (s *AlgorithmService) downloadPresetData(ctx context.Context, inputSource *
 		}
 	}
 
-	obj, err := minioClient.GetObject(ctx, bucketName, minioPath, minio.GetObjectOptions{})
+	obj, err := s.minioClient.GetObject(ctx, bucketName, minioPath, minio.GetObjectOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to get preset data from MinIO: %w", err)
 	}

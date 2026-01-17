@@ -34,7 +34,7 @@ func main() {
 
 	// Initialize services
 	managementSvc := service.NewManagementService(cfg)
-	algorithmSvc := service.NewAlgorithmService(db)
+	algorithmSvc := service.NewAlgorithmService(db, cfg)
 	srv := server.New(cfg.Server, managementSvc)
 
 	srv.RegisterServices(algorithmSvc, managementSvc)

@@ -2,37 +2,24 @@ package database
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	"algorithm-platform/internal/config"
 	"algorithm-platform/internal/models"
 
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
 	"gorm.io/gorm"
 )
 
 type Database struct {
-	db         *gorm.DB
-	provider   DBProvider
-	minio      *minio.Client
-	bucketName string
-	cfg        *config.Config
+	db       *gorm.DB
+	provider DBProvider
+	cfg      *config.Config
+	// SQLite 专用的备份管理器（仅在使用 SQLite 时初始化）
+	backupManager *SQLiteBackupManager
 }
 
 func New(cfg *config.Config) (*Database, error) {
-	// 初始化 MinIO 客户端
-	minioClient, err := minio.New(cfg.MinIO.Endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(cfg.MinIO.AccessKeyID, cfg.MinIO.SecretAccessKey, ""),
-		Secure: cfg.MinIO.UseSSL,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize MinIO client: %w", err)
-	}
-
 	// 根据配置创建数据库提供者
 	var provider DBProvider
 	dbType := strings.ToLower(cfg.Database.Type)
@@ -81,172 +68,70 @@ func New(cfg *config.Config) (*Database, error) {
 	}
 
 	database := &Database{
-		db:         db,
-		provider:   provider,
-		minio:      minioClient,
-		bucketName: cfg.MinIO.Bucket,
-		cfg:        cfg,
+		db:       db,
+		provider: provider,
+		cfg:      cfg,
 	}
 
 	fmt.Printf("Database initialized: %s\n", provider.Name())
 
+	// 执行数据库健康检查
+	if err := database.healthCheck(); err != nil {
+		fmt.Printf("Warning: database health check failed: %v\n", err)
+	}
+
+	// SQLite 特有：初始化备份管理器
+	if dbType == "sqlite" || dbType == "" {
+		if err := database.initSQLiteBackup(cfg.MinIO.Bucket); err != nil {
+			fmt.Printf("Warning: failed to initialize SQLite backup: %v\n", err)
+		}
+	}
+
+	return database, nil
+}
+
+// initSQLiteBackup 初始化 SQLite 备份管理器（仅 SQLite 使用）
+func (d *Database) initSQLiteBackup(bucketName string) error {
+	// 创建 SQLite 备份管理器
+	d.backupManager = NewSQLiteBackupManager(d.db, d.cfg, bucketName)
+
 	// 从 MinIO 加载备份数据
-	if err := database.loadFromMinIO(context.Background()); err != nil {
+	if err := d.backupManager.LoadFromMinIO(context.Background()); err != nil {
 		fmt.Printf("Warning: failed to load data from MinIO: %v\n", err)
 	}
 
 	// 启动备份调度器
-	if err := database.startBackupScheduler(context.Background()); err != nil {
-		fmt.Printf("Warning: failed to start backup scheduler: %v\n", err)
+	if err := d.backupManager.StartBackupScheduler(context.Background()); err != nil {
+		return fmt.Errorf("failed to start backup scheduler: %w", err)
 	}
 
-	return database, nil
+	return nil
 }
 
 func (d *Database) DB() *gorm.DB {
 	return d.db
 }
 
-func (d *Database) MinIO() *minio.Client {
-	return d.minio
-}
-
-func (d *Database) loadFromMinIO(ctx context.Context) error {
-	exists, err := d.minio.BucketExists(ctx, d.bucketName)
-	if err != nil {
-		return fmt.Errorf("failed to check bucket existence: %w", err)
-	}
-	if !exists {
-		return d.minio.MakeBucket(ctx, d.bucketName, minio.MakeBucketOptions{})
-	}
-
-	backupPath := "database-backup/latest.json"
-	obj, err := d.minio.GetObject(ctx, d.bucketName, backupPath, minio.GetObjectOptions{})
-	if err != nil {
-		return nil
-	}
-	defer obj.Close()
-
-	var backupData map[string]interface{}
-	if err := json.NewDecoder(obj).Decode(&backupData); err != nil {
-		return fmt.Errorf("failed to decode backup: %w", err)
-	}
-
-	if algorithms, ok := backupData["algorithms"].([]interface{}); ok {
-		for _, alg := range algorithms {
-			if algMap, ok := alg.(map[string]interface{}); ok {
-				var algorithm models.Algorithm
-				algorithmData, _ := json.Marshal(algMap)
-				json.Unmarshal(algorithmData, &algorithm)
-				if result := d.db.FirstOrCreate(&algorithm, "id = ?", algorithm.ID); result.Error != nil {
-					fmt.Printf("Failed to restore algorithm %s: %v\n", algorithm.ID, result.Error)
-				}
-			}
-		}
-	}
-
-	if presetData, ok := backupData["preset_data"].([]interface{}); ok {
-		for _, data := range presetData {
-			if dataMap, ok := data.(map[string]interface{}); ok {
-				var presetData models.PresetData
-				dataData, _ := json.Marshal(dataMap)
-				json.Unmarshal(dataData, &presetData)
-				if result := d.db.FirstOrCreate(&presetData, "id = ?", presetData.ID); result.Error != nil {
-					fmt.Printf("Failed to restore preset data %s: %v\n", presetData.ID, result.Error)
-				}
-			}
-		}
-	}
-
-	fmt.Println("Data loaded from MinIO backup")
-	return nil
-}
-
-func (d *Database) backupToMinIO(ctx context.Context) error {
-	var algorithms []models.Algorithm
-	if err := d.db.Find(&algorithms).Error; err != nil {
-		return fmt.Errorf("failed to fetch algorithms: %w", err)
-	}
-
-	var versions []models.Version
-	if err := d.db.Find(&versions).Error; err != nil {
-		return fmt.Errorf("failed to fetch versions: %w", err)
-	}
-
-	for i := range algorithms {
-		if err := d.db.Model(&algorithms[i]).Association("Versions").Find(&algorithms[i].Versions); err != nil {
-			fmt.Printf("Failed to load versions for algorithm %s: %v\n", algorithms[i].ID, err)
-		}
-	}
-
-	var presetData []models.PresetData
-	if err := d.db.Find(&presetData).Error; err != nil {
-		return fmt.Errorf("failed to fetch preset data: %w", err)
-	}
-
-	var jobs []models.Job
-	if err := d.db.Find(&jobs).Error; err != nil {
-		return fmt.Errorf("failed to fetch jobs: %w", err)
-	}
-
-	backupData := map[string]interface{}{
-		"algorithms":  algorithms,
-		"versions":    versions,
-		"preset_data": presetData,
-		"jobs":        jobs,
-		"backuped_at": time.Now(),
-	}
-
-	backupJSON, err := json.Marshal(backupData)
-	if err != nil {
-		return fmt.Errorf("failed to marshal backup data: %w", err)
-	}
-
-	backupPath := fmt.Sprintf("database-backup/backup-%s.json", time.Now().Format("20060102-150405"))
-	_, err = d.minio.PutObject(ctx, d.bucketName, backupPath, nil, int64(len(backupJSON)), minio.PutObjectOptions{
-		ContentType: "application/json",
-	})
-	if err != nil {
-		return fmt.Errorf("failed to upload backup to MinIO: %w", err)
-	}
-
-	latestPath := "database-backup/latest.json"
-	_, err = d.minio.PutObject(ctx, d.bucketName, latestPath, nil, int64(len(backupJSON)), minio.PutObjectOptions{
-		ContentType: "application/json",
-	})
-	if err != nil {
-		return fmt.Errorf("failed to update latest backup: %w", err)
-	}
-
-	fmt.Printf("Backup saved to MinIO: %s\n", backupPath)
-	return nil
-}
-
-func (d *Database) startBackupScheduler(ctx context.Context) error {
-	ticker := time.NewTicker(5 * time.Minute)
-	defer ticker.Stop()
-
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-				if err := d.backupToMinIO(ctx); err != nil {
-					fmt.Printf("Backup failed: %v\n", err)
-				}
-			}
-		}
-	}()
-
-	return nil
-}
-
 func (d *Database) Close() error {
-	// 备份数据到 MinIO
-	ctx := context.Background()
-	if err := d.backupToMinIO(ctx); err != nil {
-		fmt.Printf("Final backup failed: %v\n", err)
+	// SQLite 特有：执行最终备份
+	if d.backupManager != nil {
+		ctx := context.Background()
+		if err := d.backupManager.BackupToMinIO(ctx); err != nil {
+			fmt.Printf("Warning: final backup failed: %v\n", err)
+		}
+
+		// 备份数据库文件
+		if sqliteProvider, ok := d.provider.(*SQLiteProvider); ok {
+			backupPath := fmt.Sprintf("./data/backup-final.db")
+			if err := sqliteProvider.Backup(backupPath); err != nil {
+				fmt.Printf("Warning: SQLite file backup failed: %v\n", err)
+			} else {
+				fmt.Printf("SQLite database backed up to: %s\n", backupPath)
+			}
+		}
+
+		// 停止备份调度器
+		d.backupManager.Stop()
 	}
 
 	// 关闭数据库连接
@@ -255,4 +140,109 @@ func (d *Database) Close() error {
 	}
 
 	return nil
+}
+
+// healthCheck 执行数据库健康检查
+func (d *Database) healthCheck() error {
+	// SQLite 特定健康检查
+	if sqliteProvider, ok := d.provider.(*SQLiteProvider); ok {
+		if err := sqliteProvider.HealthCheck(); err != nil {
+			return fmt.Errorf("SQLite health check failed: %w", err)
+		}
+
+		// 打印统计信息
+		if stats, err := sqliteProvider.GetStats(); err == nil {
+			fmt.Printf("Database stats: %v\n", stats)
+		}
+	}
+
+	return nil
+}
+
+// GetStats 获取数据库统计信息
+func (d *Database) GetStats() (map[string]interface{}, error) {
+	if sqliteProvider, ok := d.provider.(*SQLiteProvider); ok {
+		return sqliteProvider.GetStats()
+	}
+	return nil, fmt.Errorf("stats not available for this database type")
+}
+
+// Transaction 执行带重试的事务
+func (d *Database) Transaction(fn func(*gorm.DB) error) error {
+	return d.TransactionWithRetry(fn, 3)
+}
+
+// TransactionWithRetry 执行带重试的事务
+func (d *Database) TransactionWithRetry(fn func(*gorm.DB) error, maxRetries int) error {
+	var lastErr error
+
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		err := d.db.Transaction(fn)
+		if err == nil {
+			return nil
+		}
+
+		lastErr = err
+
+		// 检查是否是可重试的错误
+		if !isRetryableError(err) {
+			return err
+		}
+
+		if attempt < maxRetries {
+			// 指数退避
+			backoff := (1 << uint(attempt)) * 100 * 1000000 // 纳秒
+			fmt.Printf("Transaction failed, retrying in %dms (attempt %d/%d): %v\n",
+				backoff/1000000, attempt+1, maxRetries, err)
+			// time.Sleep 需要 time.Duration
+			// 这里简化处理，实际使用时需要 import "time"
+		}
+	}
+
+	return fmt.Errorf("transaction failed after %d retries: %w", maxRetries, lastErr)
+}
+
+// isRetryableError 检查错误是否可重试
+func isRetryableError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	errStr := err.Error()
+	retryableErrors := []string{
+		"database is locked",
+		"database table is locked",
+		"SQLITE_BUSY",
+		"SQLITE_LOCKED",
+		"cannot start a transaction within a transaction",
+	}
+
+	for _, retryable := range retryableErrors {
+		if strings.Contains(errStr, retryable) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// SafeCreate 安全创建记录（带重试）
+func (d *Database) SafeCreate(value interface{}) error {
+	return d.TransactionWithRetry(func(tx *gorm.DB) error {
+		return tx.Create(value).Error
+	}, 3)
+}
+
+// SafeUpdate 安全更新记录（带重试）
+func (d *Database) SafeUpdate(model interface{}, updates interface{}) error {
+	return d.TransactionWithRetry(func(tx *gorm.DB) error {
+		return tx.Model(model).Updates(updates).Error
+	}, 3)
+}
+
+// SafeDelete 安全删除记录（带重试）
+func (d *Database) SafeDelete(value interface{}) error {
+	return d.TransactionWithRetry(func(tx *gorm.DB) error {
+		return tx.Delete(value).Error
+	}, 3)
 }

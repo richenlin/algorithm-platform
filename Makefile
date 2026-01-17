@@ -8,16 +8,16 @@ help: ## Show this help message
 
 build: ## Build the server binary
 	@echo "Building server..."
-	@go build -o bin/server ./backend/cmd/server
+	@go build -o bin/server ./backend/cmd/main.go
 	@echo "✓ Build complete: bin/server"
 
 run: ## Run the server (production mode)
 	@echo "Starting server..."
-	@go run ./backend/cmd/server/main.go
+	@go run ./backend/cmd/main.go
 
 run-local: ## Run the server in local development mode
 	@echo "Starting server in LOCAL_MODE..."
-	@LOCAL_MODE=true go run ./backend/cmd/server/main.go
+	@LOCAL_MODE=true go run ./backend/cmd/main.go
 
 dev: config-validate run-local ## Validate config and run in development mode
 

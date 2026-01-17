@@ -77,7 +77,9 @@ database:
     dbname: "algorithm_platform"
 ```
 
-详见：[数据库配置文档](backend/internal/database/README.md)
+详见：
+- [数据库配置文档](backend/internal/database/README.md)
+- [SQLite 数据安全指南](backend/internal/database/SQLITE_SAFETY.md)
 
 3. **运行服务**
 
@@ -96,10 +98,10 @@ make help
 或直接使用 go run：
 ```bash
 # 本地开发模式（使用 localhost:9000 连接 MinIO）
-LOCAL_MODE=true go run ./backend/cmd/server/main.go
+LOCAL_MODE=true go run ./backend/cmd/main.go
 
 # 或直接运行（使用配置文件中的设置）
-go run ./backend/cmd/server/main.go
+go run ./backend/cmd/main.go
 ```
 
 ## API 接口
@@ -131,8 +133,7 @@ Content-Type: application/json
 ├── backend/              # 后端代码
 │   ├── api/v1/proto/     # gRPC 生成代码
 │   ├── cmd/              # 程序入口
-│   │   ├── server/       # 主服务
-│   │   └── config-validator/ # 配置验证工具
+│   │   ├── main.go       # 主服务
 │   ├── config/           # 配置文件目录
 │   │   ├── config.yaml           # 主配置文件
 │   │   └── config.example.yaml   # 配置示例
@@ -215,7 +216,7 @@ cp backend/config/config.example.yaml backend/config/config.yaml
 # 编辑 backend/config/config.yaml 设置本地环境配置
 
 # 运行服务（本地模式）
-LOCAL_MODE=true go run ./backend/cmd/server/main.go
+LOCAL_MODE=true go run ./backend/cmd/main.go
 
 # 生成 Protobuf 代码
 cd backend && buf generate

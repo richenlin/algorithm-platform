@@ -336,23 +336,25 @@ func (s *ManagementService) UploadPresetData(ctx context.Context, req *v1.Upload
 		return nil, fmt.Errorf("either file_data or minio_path must be provided")
 	}
 
-	scheme := "http"
-	if s.cfg.MinIO.UseSSL {
-		scheme = "https"
-	}
-	minioURL := fmt.Sprintf("%s://%s/%s/%s", scheme, s.cfg.MinIO.ExternalEndpoint, s.bucketName, minioPath)
-
+	// 数据库只保存路径，不保存完整URL
 	dbPresetData := &models.PresetData{
 		ID:        id,
 		Filename:  req.Filename,
 		Category:  req.Category,
-		MinioPath: minioPath,
+		MinioPath: minioPath, // 只保存路径，如: preset-data/file.zip
 		CreatedAt: time.Now(),
 	}
 
 	if err := s.db.DB().Create(dbPresetData).Error; err != nil {
 		return nil, fmt.Errorf("failed to create preset data: %w", err)
 	}
+
+	// 返回时拼接完整URL
+	scheme := "http"
+	if s.cfg.MinIO.UseSSL {
+		scheme = "https"
+	}
+	minioURL := fmt.Sprintf("%s://%s/%s/%s", scheme, s.cfg.MinIO.ExternalEndpoint, s.bucketName, minioPath)
 
 	return &v1.UploadDataResponse{
 		FileId:   id,
@@ -454,23 +456,25 @@ func (s *ManagementService) UploadPresetDataFile(ctx context.Context, filename s
 		}
 	}
 
-	scheme := "http"
-	if s.cfg.MinIO.UseSSL {
-		scheme = "https"
-	}
-	minioURL := fmt.Sprintf("%s://%s/%s/%s", scheme, s.cfg.MinIO.ExternalEndpoint, s.bucketName, minioPath)
-
+	// 数据库只保存路径，不保存完整URL
 	dbPresetData := &models.PresetData{
 		ID:        id,
 		Filename:  filename,
 		Category:  category,
-		MinioPath: minioPath,
+		MinioPath: minioPath, // 只保存路径，如: preset-data/file.zip
 		CreatedAt: time.Now(),
 	}
 
 	if err := s.db.DB().Create(dbPresetData).Error; err != nil {
 		return nil, fmt.Errorf("failed to create preset data: %w", err)
 	}
+
+	// 返回时拼接完整URL
+	scheme := "http"
+	if s.cfg.MinIO.UseSSL {
+		scheme = "https"
+	}
+	minioURL := fmt.Sprintf("%s://%s/%s/%s", scheme, s.cfg.MinIO.ExternalEndpoint, s.bucketName, minioPath)
 
 	return &v1.UploadDataResponse{
 		FileId:   id,

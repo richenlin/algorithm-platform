@@ -1,0 +1,39 @@
+# Algorithm Platform Configuration
+
+server:
+  grpc_port: 9090
+  http_port: 8080
+
+docker:
+  host: "unix:///var/run/docker.sock"
+  api_version: "1.45"
+  tls_cert: ""
+  tls_key: ""
+
+redis:
+  addr: "localhost:6379"
+  password: ""
+  db: 0
+
+minio:
+  endpoint: "localhost:9000"
+  external_endpoint: "localhost:9000"
+  access_key_id: "minioadmin"
+  secret_access_key: "minioadmin"
+  bucket: "algorithm-platform"
+  use_ssl: false
+
+database:
+  type: "sqlite"
+  sqlite_path: "./data/algorithm-platform.db"
+  postgresql:
+    host: "localhost"
+    port: 5432
+    user: "postgres"
+    password: "postgres"
+    dbname: "algorithm_platform"
+    sslmode: "disable"
+    timezone: "Asia/Shanghai"
+
+# Local development mode
+# Set LOCAL_MODE=true environment variable to override minio endpoint to localhost:9000

@@ -1,0 +1,115 @@
+package database
+
+import (
+	"testing"
+
+	"algorithm-platform/internal/config"
+)
+
+func TestSQLiteProvider(t *testing.T) {
+	// 创建 SQLite 提供者
+	provider := NewSQLiteProvider(":memory:")
+
+	// 测试打开数据库
+	db, err := provider.Open()
+	if err != nil {
+		t.Fatalf("Failed to open SQLite database: %v", err)
+	}
+
+	// 测试配置数据库
+	err = provider.Configure(db)
+	if err != nil {
+		t.Fatalf("Failed to configure SQLite database: %v", err)
+	}
+
+	// 测试 Ping
+	err = provider.Ping()
+	if err != nil {
+		t.Fatalf("Failed to ping SQLite database: %v", err)
+	}
+
+	// 验证名称
+	if provider.Name() != "SQLite" {
+		t.Errorf("Expected provider name 'SQLite', got '%s'", provider.Name())
+	}
+
+	// 测试关闭
+	err = provider.Close()
+	if err != nil {
+		t.Fatalf("Failed to close SQLite database: %v", err)
+	}
+}
+
+func TestDatabaseInitialization(t *testing.T) {
+	// 创建测试配置
+	_ = &config.Config{
+		Server: config.ServerConfig{
+			GRPCPort: 9090,
+			HTTPPort: 8080,
+		},
+		MinIO: config.MinIOConfig{
+			Endpoint:         "localhost:9000",
+			ExternalEndpoint: "localhost:9000",
+			AccessKeyID:      "minioadmin",
+			SecretAccessKey:  "minioadmin",
+			Bucket:           "test-bucket",
+			UseSSL:           false,
+		},
+		Database: config.DatabaseConfig{
+			Type:       "sqlite",
+			SQLitePath: ":memory:",
+		},
+	}
+
+	// 注意：这个测试会失败如果 MinIO 不可用
+	// 这是预期的，因为 Database.New() 会尝试连接 MinIO
+	// 在实际环境中，可以跳过这个测试或使用 mock
+	t.Run("SQLite", func(t *testing.T) {
+		t.Skip("Skipping integration test - requires MinIO")
+	})
+
+	t.Run("PostgreSQL", func(t *testing.T) {
+		t.Skip("Skipping integration test - requires PostgreSQL and MinIO")
+	})
+}
+
+func TestPostgreSQLProvider(t *testing.T) {
+	t.Skip("Skipping PostgreSQL test - requires PostgreSQL server")
+
+	// 如果有 PostgreSQL 服务器可用，可以取消注释以下代码
+	/*
+		provider := NewPostgreSQLProvider(PostgreSQLConfig{
+			Host:     "localhost",
+			Port:     5432,
+			User:     "postgres",
+			Password: "postgres",
+			DBName:   "test_db",
+			SSLMode:  "disable",
+			Timezone: "Asia/Shanghai",
+		})
+
+		db, err := provider.Open()
+		if err != nil {
+			t.Fatalf("Failed to open PostgreSQL database: %v", err)
+		}
+
+		err = provider.Configure(db)
+		if err != nil {
+			t.Fatalf("Failed to configure PostgreSQL database: %v", err)
+		}
+
+		err = provider.Ping()
+		if err != nil {
+			t.Fatalf("Failed to ping PostgreSQL database: %v", err)
+		}
+
+		if provider.Name() != "PostgreSQL" {
+			t.Errorf("Expected provider name 'PostgreSQL', got '%s'", provider.Name())
+		}
+
+		err = provider.Close()
+		if err != nil {
+			t.Fatalf("Failed to close PostgreSQL database: %v", err)
+		}
+	*/
+}

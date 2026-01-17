@@ -33,7 +33,7 @@ func main() {
 	defer db.Close()
 
 	// Initialize services
-	managementSvc := service.NewManagementService(cfg)
+	managementSvc := service.NewManagementService(db, cfg)
 	algorithmSvc := service.NewAlgorithmService(db, cfg)
 	srv := server.New(cfg.Server, managementSvc)
 

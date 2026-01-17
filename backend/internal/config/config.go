@@ -53,8 +53,24 @@ type DatabaseConfig struct {
 }
 
 type SQLiteConfig struct {
-	Path                  string        `yaml:"path"`
-	WALCheckpointInterval time.Duration `yaml:"wal_checkpoint_interval"`
+	Path                     string `yaml:"path"`
+	WALCheckpointIntervalStr string `yaml:"wal_checkpoint_interval"`
+}
+
+// GetWALCheckpointInterval 获取 WAL checkpoint 间隔
+func (c *SQLiteConfig) GetWALCheckpointInterval() time.Duration {
+	if c.WALCheckpointIntervalStr == "" {
+		return 30 * time.Second // 默认 30 秒
+	}
+
+	duration, err := time.ParseDuration(c.WALCheckpointIntervalStr)
+	if err != nil {
+		fmt.Printf("Warning: invalid wal_checkpoint_interval '%s', using default 30s: %v\n",
+			c.WALCheckpointIntervalStr, err)
+		return 30 * time.Second
+	}
+
+	return duration
 }
 
 type PostgreSQLConfig struct {
@@ -127,8 +143,8 @@ func Default() *Config {
 		Database: DatabaseConfig{
 			Type: "sqlite",
 			SQLite: SQLiteConfig{
-				Path:                  "./data/algorithm-platform.db",
-				WALCheckpointInterval: 30 * time.Second,
+				Path:                     "./data/algorithm-platform.db",
+				WALCheckpointIntervalStr: "30s",
 			},
 			PostgreSQL: PostgreSQLConfig{
 				Host:     "localhost",

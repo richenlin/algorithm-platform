@@ -59,6 +59,13 @@ func New(cfg *config.Config) (*Database, error) {
 		return nil, fmt.Errorf("failed to migrate database: %w", err)
 	}
 
+	// 执行迁移后的操作（如数据恢复）
+	if postMigrator, ok := provider.(interface{ PostMigrate() error }); ok {
+		if err := postMigrator.PostMigrate(); err != nil {
+			return nil, fmt.Errorf("failed to execute post-migration: %w", err)
+		}
+	}
+
 	database := &Database{
 		db:       db,
 		provider: provider,

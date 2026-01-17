@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"algorithm-platform/internal/config"
+	"algorithm-platform/internal/models"
 )
 
 func TestSQLiteProvider(t *testing.T) {
@@ -12,15 +13,25 @@ func TestSQLiteProvider(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := filepath.Join(tmpDir, "test.db")
 
-	// 创建 SQLite 提供者
-	provider := NewSQLiteProvider(&config.Config{
+	// 创建测试配置（不包含 MinIO，避免连接错误）
+	testCfg := &config.Config{
 		Database: config.DatabaseConfig{
 			Type: "sqlite",
 			SQLite: config.SQLiteConfig{
-				Path: dbPath,
+				Path:                     dbPath,
+				WALCheckpointIntervalStr: "30s",
 			},
 		},
-	})
+		MinIO: config.MinIOConfig{
+			Endpoint:        "test:9000",
+			Bucket:          "test",
+			AccessKeyID:     "test",
+			SecretAccessKey: "test",
+		},
+	}
+
+	// 创建 SQLite 提供者
+	provider := NewSQLiteProvider(testCfg)
 
 	// 测试打开数据库
 	db, err := provider.Open()
@@ -32,6 +43,18 @@ func TestSQLiteProvider(t *testing.T) {
 	err = provider.Configure(db)
 	if err != nil {
 		t.Fatalf("Failed to configure SQLite database: %v", err)
+	}
+
+	// 迁移表结构（模拟 Database.New 的行为）
+	err = models.AutoMigrate(db)
+	if err != nil {
+		t.Fatalf("Failed to migrate database: %v", err)
+	}
+
+	// 执行迁移后操作
+	err = provider.PostMigrate()
+	if err != nil {
+		t.Fatalf("Failed to execute post-migration: %v", err)
 	}
 
 	// 测试 Ping

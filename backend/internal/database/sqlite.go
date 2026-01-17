@@ -32,10 +32,17 @@ type SQLiteConfig struct {
 
 // NewSQLiteProvider 创建 SQLite 数据库提供者
 func NewSQLiteProvider(cfg *config.Config) *SQLiteProvider {
-	// 默认使用 SQLite
+	// 设置默认值
+	walInterval := cfg.Database.SQLite.GetWALCheckpointInterval()
+
+	dbPath := cfg.Database.SQLite.Path
+	if dbPath == "" {
+		dbPath = "./data/algorithm-platform.db"
+	}
+
 	return &SQLiteProvider{
-		dbPath:                cfg.Database.SQLite.Path,
-		walCheckpointInterval: cfg.Database.SQLite.WALCheckpointInterval,
+		dbPath:                dbPath,
+		walCheckpointInterval: walInterval,
 		stopCheckpoint:        make(chan struct{}),
 		cfg:                   cfg,
 	}
@@ -147,7 +154,12 @@ func (p *SQLiteProvider) Configure(db *gorm.DB) error {
 	sqlDB.SetMaxIdleConns(2)    // 保持空闲连接
 	sqlDB.SetConnMaxLifetime(0) // 连接不过期
 
-	// 如果有配置，初始化备份管理器
+	// 安装版本控制插件
+	if err := InstallVersioning(p.db); err != nil {
+		fmt.Printf("Warning: failed to install versioning plugin: %v\n", err)
+	}
+
+	// 如果有配置，初始化备份管理器（但不立即加载数据）
 	if p.cfg != nil {
 		if err := p.initBackupManager(); err != nil {
 			fmt.Printf("Warning: failed to initialize backup manager: %v\n", err)
@@ -172,17 +184,26 @@ func (p *SQLiteProvider) initBackupManager() error {
 
 	p.backupManager = backupManager
 
-	// 从 MinIO 加载备份数据
-	if err := p.backupManager.LoadFromMinIO(); err != nil {
-		fmt.Printf("Warning: failed to load data from MinIO: %v\n", err)
-	}
-
-	// 启动备份调度器
-	if err := p.backupManager.StartBackupScheduler(); err != nil {
-		return fmt.Errorf("failed to start backup scheduler: %w", err)
-	}
+	// 注意：不在这里LoadFromMinIO，而是在PostMigrate中执行
 
 	fmt.Println("SQLite backup manager initialized")
+	return nil
+}
+
+// PostMigrate 在AutoMigrate之后执行的操作
+func (p *SQLiteProvider) PostMigrate() error {
+	// 表已经创建完成，现在可以安全地加载备份数据
+	if p.backupManager != nil {
+		if err := p.backupManager.LoadFromMinIO(); err != nil {
+			fmt.Printf("Warning: failed to load data from MinIO: %v\n", err)
+		}
+
+		// 启动备份调度器
+		if err := p.backupManager.StartBackupScheduler(); err != nil {
+			return fmt.Errorf("failed to start backup scheduler: %w", err)
+		}
+	}
+
 	return nil
 }
 
@@ -236,16 +257,17 @@ func (p *SQLiteProvider) checkpoint() error {
 func (p *SQLiteProvider) Close() error {
 	// 停止备份管理器
 	if p.backupManager != nil {
+		// 执行最终备份
 		if err := p.backupManager.BackupToMinIO(); err != nil {
-			fmt.Printf("Warning: final backup failed: %v\n", err)
+			fmt.Printf("Warning: final JSON backup failed: %v\n", err)
 		}
 
-		// 备份数据库文件
+		// 备份数据库文件到本地和 MinIO
 		backupPath := "./data/backup-final.db"
-		if err := p.Backup(backupPath); err != nil {
+		if err := p.backupManager.BackupDBFile(backupPath); err != nil {
 			fmt.Printf("Warning: SQLite file backup failed: %v\n", err)
 		} else {
-			fmt.Printf("SQLite database backed up to: %s\n", backupPath)
+			fmt.Printf("SQLite database backed up to: %s and MinIO\n", backupPath)
 		}
 
 		p.backupManager.Stop()

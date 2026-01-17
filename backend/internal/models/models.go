@@ -6,6 +6,16 @@ import (
 	"gorm.io/gorm"
 )
 
+// DatabaseMetadata 数据库元数据，用于版本控制和数据同步
+type DatabaseMetadata struct {
+	ID            uint      `gorm:"primaryKey" json:"id"`
+	Version       int64     `gorm:"not null;index" json:"version"`         // 数据版本号，每次写入递增
+	LastUpdatedAt time.Time `gorm:"not null;index" json:"last_updated_at"` // 最后更新时间
+	UpdatedBy     string    `gorm:"type:varchar(100)" json:"updated_by"`   // 更新来源（如：api, backup_restore）
+	CheckpointAt  time.Time `json:"checkpoint_at"`                         // 最后checkpoint时间
+	RecordCount   int64     `json:"record_count"`                          // 总记录数
+}
+
 type Algorithm struct {
 	ID               string    `gorm:"primaryKey;type:varchar(36)" json:"id"`
 	Name             string    `gorm:"type:varchar(255);not null" json:"name"`
@@ -56,12 +66,14 @@ type PresetData struct {
 	ID        string    `gorm:"primaryKey;type:varchar(36)" json:"id"`
 	Filename  string    `gorm:"type:varchar(255);not null" json:"filename"`
 	Category  string    `gorm:"type:varchar(255);index" json:"category"`
-	MinioURL  string    `gorm:"type:text" json:"minio_url"`
+	MinioPath string    `gorm:"type:text" json:"minio_path"` // MinIO路径
+	MinioURL  string    `gorm:"type:text" json:"minio_url"`  // 完整URL（已废弃，保留兼容性）
 	CreatedAt time.Time `json:"created_at"`
 }
 
 func AutoMigrate(db *gorm.DB) error {
 	return db.AutoMigrate(
+		&DatabaseMetadata{},
 		&Algorithm{},
 		&Version{},
 		&Job{},

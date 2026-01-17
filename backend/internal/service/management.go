@@ -6,14 +6,16 @@ import (
 	"fmt"
 	"io"
 	"runtime"
-	"sort"
 	"strings"
 	"sync"
 	"time"
 
 	"algorithm-platform/internal/config"
+	"algorithm-platform/internal/database"
+	"algorithm-platform/internal/models"
 
 	v1 "algorithm-platform/api/v1/proto"
+
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -23,15 +25,13 @@ type ManagementService struct {
 	v1.UnimplementedManagementServiceServer
 
 	mu          sync.RWMutex
-	algorithms  map[string]*v1.Algorithm
-	versions    map[string][]*v1.Version
-	presetData  map[string]*v1.PresetData
+	db          *database.Database
 	minioClient *minio.Client
 	bucketName  string
 	cfg         *config.Config
 }
 
-func NewManagementService(cfg *config.Config) *ManagementService {
+func NewManagementService(db *database.Database, cfg *config.Config) *ManagementService {
 	minioClient, err := minio.New(cfg.MinIO.Endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(cfg.MinIO.AccessKeyID, cfg.MinIO.SecretAccessKey, ""),
 		Secure: cfg.MinIO.UseSSL,
@@ -54,12 +54,57 @@ func NewManagementService(cfg *config.Config) *ManagementService {
 	}
 
 	return &ManagementService{
-		algorithms:  make(map[string]*v1.Algorithm),
-		versions:    make(map[string][]*v1.Version),
-		presetData:  make(map[string]*v1.PresetData),
+		db:          db,
 		minioClient: minioClient,
 		bucketName:  bucketName,
 		cfg:         cfg,
+	}
+}
+
+// modelToProto 将数据库模型转换为proto格式
+func modelToProto(dbAlg *models.Algorithm) *v1.Algorithm {
+	tags := []string{}
+	if dbAlg.Tags != "" {
+		tags = strings.Split(dbAlg.Tags, ",")
+	}
+
+	return &v1.Algorithm{
+		Id:               dbAlg.ID,
+		Name:             dbAlg.Name,
+		Description:      dbAlg.Description,
+		Language:         dbAlg.Language,
+		Platform:         v1.Platform(v1.Platform_value["PLATFORM_"+strings.ToUpper(dbAlg.Platform)]),
+		Category:         dbAlg.Category,
+		Entrypoint:       dbAlg.Entrypoint,
+		Tags:             tags,
+		PresetDataId:     dbAlg.PresetDataID,
+		CurrentVersionId: dbAlg.CurrentVersionID,
+		CreatedAt:        timestamppb.New(dbAlg.CreatedAt),
+		UpdatedAt:        timestamppb.New(dbAlg.UpdatedAt),
+	}
+}
+
+// versionModelToProto 将版本模型转换为proto格式
+func versionModelToProto(dbVer *models.Version) *v1.Version {
+	return &v1.Version{
+		Id:             dbVer.ID,
+		AlgorithmId:    dbVer.AlgorithmID,
+		VersionNumber:  int32(dbVer.VersionNumber),
+		MinioPath:      dbVer.MinioPath,
+		SourceCodeFile: dbVer.SourceCodeFile,
+		CommitMessage:  dbVer.CommitMessage,
+		CreatedAt:      timestamppb.New(dbVer.CreatedAt),
+	}
+}
+
+// presetDataModelToProto 将预设数据模型转换为proto格式
+func presetDataModelToProto(dbData *models.PresetData, scheme, endpoint, bucket string) *v1.PresetData {
+	return &v1.PresetData{
+		Id:        dbData.ID,
+		Filename:  dbData.Filename,
+		Category:  dbData.Category,
+		MinioUrl:  fmt.Sprintf("%s://%s/%s/%s", scheme, endpoint, bucket, dbData.MinioPath),
+		CreatedAt: timestamppb.New(dbData.CreatedAt),
 	}
 }
 
@@ -68,23 +113,29 @@ func (s *ManagementService) CreateAlgorithm(ctx context.Context, req *v1.CreateA
 	defer s.mu.Unlock()
 
 	id := fmt.Sprintf("alg_%d", time.Now().UnixNano())
+	now := time.Now()
 
-	algorithm := &v1.Algorithm{
-		Id:           id,
+	// 创建数据库模型
+	dbAlgorithm := &models.Algorithm{
+		ID:           id,
 		Name:         req.Name,
 		Description:  req.Description,
 		Language:     req.Language,
-		Platform:     req.Platform,
+		Platform:     strings.ToLower(req.Platform.String()),
 		Category:     "",
 		Entrypoint:   req.Entrypoint,
-		Tags:         req.Tags,
-		PresetDataId: req.PresetDataId,
-		CreatedAt:    timestamppb.Now(),
-		UpdatedAt:    timestamppb.Now(),
+		Tags:         strings.Join(req.Tags, ","),
+		PresetDataID: req.PresetDataId,
+		CreatedAt:    now,
+		UpdatedAt:    now,
 	}
 
-	s.algorithms[id] = algorithm
+	// 保存到数据库
+	if err := s.db.DB().Create(dbAlgorithm).Error; err != nil {
+		return nil, fmt.Errorf("failed to create algorithm: %w", err)
+	}
 
+	// 处理文件上传
 	if len(req.FileData) > 0 && req.FileName != "" {
 		minioPath := fmt.Sprintf("algorithms/%s/v1/%s", id, req.FileName)
 		if s.minioClient != nil {
@@ -96,60 +147,62 @@ func (s *ManagementService) CreateAlgorithm(ctx context.Context, req *v1.CreateA
 			}
 		}
 
-		version := &v1.Version{
-			Id:             fmt.Sprintf("ver_%d", time.Now().UnixNano()),
-			AlgorithmId:    id,
+		// 创建版本记录
+		dbVersion := &models.Version{
+			ID:             fmt.Sprintf("ver_%d", time.Now().UnixNano()),
+			AlgorithmID:    id,
 			VersionNumber:  1,
 			MinioPath:      minioPath,
 			SourceCodeFile: req.FileName,
 			CommitMessage:  "Initial version",
-			CreatedAt:      timestamppb.Now(),
+			CreatedAt:      now,
 		}
 
-		s.versions[id] = append(s.versions[id], version)
-		algorithm.CurrentVersionId = version.Id
+		if err := s.db.DB().Create(dbVersion).Error; err != nil {
+			fmt.Printf("Failed to create version: %v\n", err)
+		} else {
+			// 更新算法的当前版本ID
+			dbAlgorithm.CurrentVersionID = dbVersion.ID
+			s.db.DB().Save(dbAlgorithm)
+		}
 	}
 
-	return algorithm, nil
+	return modelToProto(dbAlgorithm), nil
 }
 
 func (s *ManagementService) UpdateAlgorithm(ctx context.Context, req *v1.UpdateAlgorithmRequest) (*v1.Algorithm, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	algorithm, exists := s.algorithms[req.Id]
-	if !exists {
-		return nil, fmt.Errorf("algorithm not found")
+	var dbAlgorithm models.Algorithm
+	if err := s.db.DB().First(&dbAlgorithm, "id = ?", req.Id).Error; err != nil {
+		return nil, fmt.Errorf("algorithm not found: %w", err)
 	}
 
-	algorithm.Name = req.Name
-	algorithm.Description = req.Description
-	algorithm.Tags = req.Tags
-	algorithm.UpdatedAt = timestamppb.Now()
+	dbAlgorithm.Name = req.Name
+	dbAlgorithm.Description = req.Description
+	dbAlgorithm.Tags = strings.Join(req.Tags, ",")
+	dbAlgorithm.UpdatedAt = time.Now()
 
-	return algorithm, nil
+	if err := s.db.DB().Save(&dbAlgorithm).Error; err != nil {
+		return nil, fmt.Errorf("failed to update algorithm: %w", err)
+	}
+
+	return modelToProto(&dbAlgorithm), nil
 }
 
 func (s *ManagementService) ListAlgorithms(ctx context.Context, req *v1.ListAlgorithmsRequest) (*v1.ListAlgorithmsResponse, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	algorithms := make([]*v1.Algorithm, 0, len(s.algorithms))
-	for _, alg := range s.algorithms {
-		algorithmCopy := &v1.Algorithm{
-			Id:               alg.Id,
-			Name:             alg.Name,
-			Description:      alg.Description,
-			Language:         alg.Language,
-			Platform:         alg.Platform,
-			Entrypoint:       alg.Entrypoint,
-			Tags:             alg.Tags,
-			CurrentVersionId: alg.CurrentVersionId,
-			CreatedAt:        alg.CreatedAt,
-			UpdatedAt:        alg.UpdatedAt,
-		}
+	var dbAlgorithms []models.Algorithm
+	if err := s.db.DB().Find(&dbAlgorithms).Error; err != nil {
+		return nil, fmt.Errorf("failed to list algorithms: %w", err)
+	}
 
-		algorithms = append(algorithms, algorithmCopy)
+	algorithms := make([]*v1.Algorithm, len(dbAlgorithms))
+	for i, dbAlg := range dbAlgorithms {
+		algorithms[i] = modelToProto(&dbAlg)
 	}
 
 	return &v1.ListAlgorithmsResponse{
@@ -162,18 +215,24 @@ func (s *ManagementService) GetAlgorithm(ctx context.Context, req *v1.GetAlgorit
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	alg, exists := s.algorithms[req.Id]
-	if !exists {
-		return nil, fmt.Errorf("algorithm not found")
+	var dbAlgorithm models.Algorithm
+	if err := s.db.DB().First(&dbAlgorithm, "id = ?", req.Id).Error; err != nil {
+		return nil, fmt.Errorf("algorithm not found: %w", err)
 	}
 
-	versions := s.versions[req.Id]
-	versionsCopy := make([]*v1.Version, len(versions))
-	copy(versionsCopy, versions)
+	var dbVersions []models.Version
+	if err := s.db.DB().Where("algorithm_id = ?", req.Id).Order("version_number ASC").Find(&dbVersions).Error; err != nil {
+		return nil, fmt.Errorf("failed to get versions: %w", err)
+	}
+
+	versions := make([]*v1.Version, len(dbVersions))
+	for i, dbVer := range dbVersions {
+		versions[i] = versionModelToProto(&dbVer)
+	}
 
 	return &v1.GetAlgorithmResponse{
-		Algorithm: alg,
-		Versions:  versionsCopy,
+		Algorithm: modelToProto(&dbAlgorithm),
+		Versions:  versions,
 	}, nil
 }
 
@@ -181,15 +240,17 @@ func (s *ManagementService) CreateVersion(ctx context.Context, req *v1.CreateVer
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	algorithm, exists := s.algorithms[req.AlgorithmId]
-	if !exists {
-		return nil, fmt.Errorf("algorithm not found")
+	var dbAlgorithm models.Algorithm
+	if err := s.db.DB().First(&dbAlgorithm, "id = ?", req.AlgorithmId).Error; err != nil {
+		return nil, fmt.Errorf("algorithm not found: %w", err)
 	}
 
-	existingVersions := s.versions[req.AlgorithmId]
-	nextVersionNumber := int32(1)
-	if len(existingVersions) > 0 {
-		nextVersionNumber = existingVersions[len(existingVersions)-1].VersionNumber + 1
+	// 获取最新版本号
+	var lastVersion models.Version
+	nextVersionNumber := 1
+	err := s.db.DB().Where("algorithm_id = ?", req.AlgorithmId).Order("version_number DESC").First(&lastVersion).Error
+	if err == nil {
+		nextVersionNumber = lastVersion.VersionNumber + 1
 	}
 
 	minioPath := req.SourceCodeZipUrl
@@ -206,49 +267,49 @@ func (s *ManagementService) CreateVersion(ctx context.Context, req *v1.CreateVer
 		}
 	}
 
-	version := &v1.Version{
-		Id:             fmt.Sprintf("ver_%d", time.Now().UnixNano()),
-		AlgorithmId:    req.AlgorithmId,
+	dbVersion := &models.Version{
+		ID:             fmt.Sprintf("ver_%d", time.Now().UnixNano()),
+		AlgorithmID:    req.AlgorithmId,
 		VersionNumber:  nextVersionNumber,
 		MinioPath:      minioPath,
 		SourceCodeFile: req.FileName,
 		CommitMessage:  req.CommitMessage,
-		CreatedAt:      timestamppb.Now(),
+		CreatedAt:      time.Now(),
 	}
 
-	s.versions[req.AlgorithmId] = append(s.versions[req.AlgorithmId], version)
-	algorithm.CurrentVersionId = version.Id
+	if err := s.db.DB().Create(dbVersion).Error; err != nil {
+		return nil, fmt.Errorf("failed to create version: %w", err)
+	}
 
-	return version, nil
+	// 更新算法的当前版本
+	dbAlgorithm.CurrentVersionID = dbVersion.ID
+	s.db.DB().Save(&dbAlgorithm)
+
+	return versionModelToProto(dbVersion), nil
 }
 
 func (s *ManagementService) RollbackVersion(ctx context.Context, req *v1.RollbackVersionRequest) (*v1.Algorithm, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	algorithm, exists := s.algorithms[req.AlgorithmId]
-	if !exists {
-		return nil, fmt.Errorf("algorithm not found")
+	var dbAlgorithm models.Algorithm
+	if err := s.db.DB().First(&dbAlgorithm, "id = ?", req.AlgorithmId).Error; err != nil {
+		return nil, fmt.Errorf("algorithm not found: %w", err)
 	}
 
-	var targetVersion *v1.Version
-	found := false
-	for _, version := range s.versions[req.AlgorithmId] {
-		if version.Id == req.VersionId {
-			targetVersion = version
-			found = true
-			break
-		}
+	var dbVersion models.Version
+	if err := s.db.DB().First(&dbVersion, "id = ? AND algorithm_id = ?", req.VersionId, req.AlgorithmId).Error; err != nil {
+		return nil, fmt.Errorf("version not found: %w", err)
 	}
 
-	if !found || targetVersion == nil {
-		return nil, fmt.Errorf("version not found")
+	dbAlgorithm.CurrentVersionID = req.VersionId
+	dbAlgorithm.UpdatedAt = time.Now()
+
+	if err := s.db.DB().Save(&dbAlgorithm).Error; err != nil {
+		return nil, fmt.Errorf("failed to rollback version: %w", err)
 	}
 
-	algorithm.CurrentVersionId = req.VersionId
-	algorithm.UpdatedAt = timestamppb.Now()
-
-	return algorithm, nil
+	return modelToProto(&dbAlgorithm), nil
 }
 
 func (s *ManagementService) UploadPresetData(ctx context.Context, req *v1.UploadDataRequest) (*v1.UploadDataResponse, error) {
@@ -256,7 +317,6 @@ func (s *ManagementService) UploadPresetData(ctx context.Context, req *v1.Upload
 	defer s.mu.Unlock()
 
 	id := fmt.Sprintf("data_%d", time.Now().UnixNano())
-
 	var minioPath string
 
 	if len(req.FileData) > 0 && req.Filename != "" {
@@ -276,17 +336,23 @@ func (s *ManagementService) UploadPresetData(ctx context.Context, req *v1.Upload
 		return nil, fmt.Errorf("either file_data or minio_path must be provided")
 	}
 
-	minioURL := fmt.Sprintf("http://localhost:9000/%s/%s", s.bucketName, minioPath)
+	scheme := "http"
+	if s.cfg.MinIO.UseSSL {
+		scheme = "https"
+	}
+	minioURL := fmt.Sprintf("%s://%s/%s/%s", scheme, s.cfg.MinIO.ExternalEndpoint, s.bucketName, minioPath)
 
-	presetData := &v1.PresetData{
-		Id:        id,
+	dbPresetData := &models.PresetData{
+		ID:        id,
 		Filename:  req.Filename,
 		Category:  req.Category,
-		MinioUrl:  minioURL,
-		CreatedAt: timestamppb.Now(),
+		MinioPath: minioPath,
+		CreatedAt: time.Now(),
 	}
 
-	s.presetData[id] = presetData
+	if err := s.db.DB().Create(dbPresetData).Error; err != nil {
+		return nil, fmt.Errorf("failed to create preset data: %w", err)
+	}
 
 	return &v1.UploadDataResponse{
 		FileId:   id,
@@ -303,29 +369,20 @@ func (s *ManagementService) ListPresetData(ctx context.Context, req *v1.ListPres
 		scheme = "https"
 	}
 
-	files := make([]*v1.PresetData, 0, len(s.presetData))
-	for _, data := range s.presetData {
-		if req.Category != "" && data.Category != req.Category {
-			continue
-		}
-
-		dataCopy := &v1.PresetData{
-			Id:        data.Id,
-			Filename:  data.Filename,
-			Category:  data.Category,
-			MinioUrl:  fmt.Sprintf("%s://%s/%s/%s", scheme, s.cfg.MinIO.ExternalEndpoint, s.bucketName, data.MinioUrl),
-			CreatedAt: data.CreatedAt,
-		}
-
-		files = append(files, dataCopy)
+	query := s.db.DB()
+	if req.Category != "" {
+		query = query.Where("category = ?", req.Category)
 	}
 
-	sort.Slice(files, func(i, j int) bool {
-		if files[i].CreatedAt == nil || files[j].CreatedAt == nil {
-			return false
-		}
-		return files[i].CreatedAt.AsTime().After(files[j].CreatedAt.AsTime())
-	})
+	var dbPresetData []models.PresetData
+	if err := query.Order("created_at DESC").Find(&dbPresetData).Error; err != nil {
+		return nil, fmt.Errorf("failed to list preset data: %w", err)
+	}
+
+	files := make([]*v1.PresetData, len(dbPresetData))
+	for i, dbData := range dbPresetData {
+		files[i] = presetDataModelToProto(&dbData, scheme, s.cfg.MinIO.ExternalEndpoint, s.bucketName)
+	}
 
 	return &v1.ListPresetDataResponse{
 		Files: files,
@@ -337,20 +394,23 @@ func (s *ManagementService) DeletePresetData(ctx context.Context, req *v1.Delete
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	data, exists := s.presetData[req.Id]
-	if !exists {
-		return nil, fmt.Errorf("data not found")
+	var dbPresetData models.PresetData
+	if err := s.db.DB().First(&dbPresetData, "id = ?", req.Id).Error; err != nil {
+		return nil, fmt.Errorf("data not found: %w", err)
 	}
 
-	minioPath := data.MinioUrl
+	// 从MinIO删除文件
 	if s.minioClient != nil {
-		err := s.minioClient.RemoveObject(ctx, s.bucketName, minioPath, minio.RemoveObjectOptions{})
+		err := s.minioClient.RemoveObject(ctx, s.bucketName, dbPresetData.MinioPath, minio.RemoveObjectOptions{})
 		if err != nil {
 			fmt.Printf("Failed to remove object from MinIO: %v\n", err)
 		}
 	}
 
-	delete(s.presetData, req.Id)
+	// 从数据库删除
+	if err := s.db.DB().Delete(&dbPresetData).Error; err != nil {
+		return nil, fmt.Errorf("failed to delete preset data: %w", err)
+	}
 
 	return &v1.DeletePresetDataResponse{
 		Success: true,
@@ -362,17 +422,16 @@ func (s *ManagementService) GetPresetDataDownloadURL(ctx context.Context, fileID
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	data, exists := s.presetData[fileID]
-	if !exists {
-		return "", fmt.Errorf("file not found")
+	var dbPresetData models.PresetData
+	if err := s.db.DB().First(&dbPresetData, "id = ?", fileID).Error; err != nil {
+		return "", fmt.Errorf("file not found: %w", err)
 	}
 
 	if s.minioClient == nil {
 		return "", fmt.Errorf("minio client not available")
 	}
 
-	minioPath := data.MinioUrl
-	presignedURL, err := s.minioClient.PresignedGetObject(ctx, s.bucketName, minioPath, time.Hour*24, nil)
+	presignedURL, err := s.minioClient.PresignedGetObject(ctx, s.bucketName, dbPresetData.MinioPath, time.Hour*24, nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate presigned URL: %v", err)
 	}
@@ -385,8 +444,8 @@ func (s *ManagementService) UploadPresetDataFile(ctx context.Context, filename s
 	defer s.mu.Unlock()
 
 	id := fmt.Sprintf("data_%d", time.Now().UnixNano())
-
 	minioPath := fmt.Sprintf("preset-data/%s", originalFilename)
+
 	if s.minioClient != nil {
 		_, err := s.minioClient.PutObject(ctx, s.bucketName, minioPath, file, -1, minio.PutObjectOptions{})
 		if err != nil {
@@ -401,15 +460,17 @@ func (s *ManagementService) UploadPresetDataFile(ctx context.Context, filename s
 	}
 	minioURL := fmt.Sprintf("%s://%s/%s/%s", scheme, s.cfg.MinIO.ExternalEndpoint, s.bucketName, minioPath)
 
-	presetData := &v1.PresetData{
-		Id:        id,
+	dbPresetData := &models.PresetData{
+		ID:        id,
 		Filename:  filename,
 		Category:  category,
-		MinioUrl:  minioPath,
-		CreatedAt: timestamppb.Now(),
+		MinioPath: minioPath,
+		CreatedAt: time.Now(),
 	}
 
-	s.presetData[id] = presetData
+	if err := s.db.DB().Create(dbPresetData).Error; err != nil {
+		return nil, fmt.Errorf("failed to create preset data: %w", err)
+	}
 
 	return &v1.UploadDataResponse{
 		FileId:   id,
@@ -418,18 +479,50 @@ func (s *ManagementService) UploadPresetDataFile(ctx context.Context, filename s
 }
 
 func (s *ManagementService) ListJobs(ctx context.Context, req *v1.ListJobsRequest) (*v1.ListJobsResponse, error) {
+	var dbJobs []models.Job
+	query := s.db.DB()
+
+	if req.AlgorithmId != "" {
+		query = query.Where("algorithm_id = ?", req.AlgorithmId)
+	}
+	if req.Status != "" {
+		query = query.Where("status = ?", req.Status)
+	}
+
+	if err := query.Order("created_at DESC").Limit(100).Find(&dbJobs).Error; err != nil {
+		return nil, fmt.Errorf("failed to list jobs: %w", err)
+	}
+
+	jobs := make([]*v1.JobSummary, len(dbJobs))
+	for i, dbJob := range dbJobs {
+		jobs[i] = &v1.JobSummary{
+			JobId:       dbJob.ID,
+			AlgorithmId: dbJob.AlgorithmID,
+			Status:      dbJob.Status,
+			CreatedAt:   timestamppb.New(dbJob.CreatedAt),
+		}
+	}
+
 	return &v1.ListJobsResponse{
-		Jobs:  []*v1.JobSummary{},
-		Total: 0,
+		Jobs:  jobs,
+		Total: int32(len(jobs)),
 	}, nil
 }
 
 func (s *ManagementService) GetJobDetail(ctx context.Context, req *v1.GetJobDetailRequest) (*v1.JobDetail, error) {
+	var dbJob models.Job
+	if err := s.db.DB().First(&dbJob, "id = ?", req.JobId).Error; err != nil {
+		return nil, fmt.Errorf("job not found: %w", err)
+	}
+
 	return &v1.JobDetail{
-		JobId:       req.JobId,
-		AlgorithmId: "alg_001",
-		Mode:        "async",
-		Status:      "pending",
+		JobId:       dbJob.ID,
+		AlgorithmId: dbJob.AlgorithmID,
+		Mode:        dbJob.Mode,
+		Status:      dbJob.Status,
+		OutputUrl:   dbJob.OutputURL,
+		LogUrl:      dbJob.LogURL,
+		CreatedAt:   timestamppb.New(dbJob.CreatedAt),
 	}, nil
 }
 
